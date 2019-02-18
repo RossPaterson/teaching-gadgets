@@ -11,8 +11,6 @@ const codeParams = {
 	leftMargin: 60,
 	rightMargin: 30,
 	headerHeight: 30,
-	xOffset: 8, // offset for displaying nested activations
-	yOffset: 5,
 	headerColour: "#a0522d",
 	codeColour: "#ffeecc",
 	currentColour: "#ffcc77",
