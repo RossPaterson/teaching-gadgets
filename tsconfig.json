@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "lib": ["dom", "es2015"],
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "alwaysStrict": true,
+        "strictBindCallApply": true,
+        "strictFunctionTypes": true,
+        "noFallthroughCasesInSwitch": true,
+        "noUnusedLocals": true,
+        "noImplicitReturns": true,
+        "outDir" : "built",
+        "noEmitOnError": true
+    },
+    "files": [
+        "src/regex_language.ts",
+        "src/applet.ts",
+        "src/bararray.ts",
+        "src/codeapplet.ts",
+        "src/subsetsum.ts"
+    ]
+}
