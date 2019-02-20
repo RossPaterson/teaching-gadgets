@@ -97,7 +97,7 @@ function drawSelection(elem: HTMLCanvasElement, arr: Array<Entry>, capacity: num
 	ctx.font = "15px Arial";
 	ctx.fillStyle = "black";
 	ctx.textAlign = "center";
-	ctx.fillText("Target: " + capacity, width/2, 20);
+	ctx.fillText(`Target: ${capacity}`, width/2, 20);
 
 	const ypos: number = height*2/3;
 	const ncells: number = arr.length + 1;

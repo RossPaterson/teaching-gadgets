@@ -129,16 +129,16 @@ class Scanner {
 		const token = this.str.match(/^([a-zA-Z]\w*|\d+|.)/)[0];
 		this.str = this.str.substr(token.length);
 		this.token = token;
-		// console.log("token = '" + this.token + "'");
+		// console.log(`token = '${this.token}'`);
 	}
 
 	fail(msg: string): never {
-		throw msg + ": " + this.currLine;
+		throw `${msg}: ${this.currLine}`;
 	}
 
 	match(t: string): void {
 		if (this.token != t)
-			this.fail("'" + this.token + "' found when expecting '" + t + "'");
+			this.fail(`'${this.token}' found when expecting '${t}'`);
 		this.advance();
 	}
 
@@ -149,7 +149,7 @@ class Scanner {
 	just<T>(nonterm: Parser<T>): T {
 		const e: T = nonterm(this);
 		if (this.token != '')
-			this.fail("'" + this.token + "' found when expecting end of string");
+			this.fail(`'${this.token}' found when expecting end of string`);
 		return e;
 	}
 
@@ -322,7 +322,7 @@ function conjunct(sc: Scanner): Expression {
 function predicate(sc: Scanner): Predicate {
 	const tok: string = sc.token;
 	if (! (tok in predicates))
-		sc.fail("unknown predicate '" + tok + "'");
+		sc.fail(`unknown predicate '${tok}'`);
 	sc.advance();
 	return predicates[tok] as Predicate;
 }
@@ -566,7 +566,7 @@ class ReturnStmt extends Statement {
 	}
 
 	draw(cursor: Cursor, depth: number): void {
-		cursor.printLine("RETURN " + this.text, depth);
+		cursor.printLine(`RETURN ${this.text}`, depth);
 	}
 
 	patch(start: number, succ: number): void { this.next = start; }
@@ -670,7 +670,7 @@ class WhileStmt extends Statement {
 	}
 
 	draw(cursor: Cursor, depth: number): void {
-		cursor.printLine("WHILE " + this.text, depth);
+		cursor.printLine(`WHILE ${this.text}`, depth);
 		this.body.draw(cursor, depth+1);
 	}
 
@@ -707,7 +707,7 @@ class IfStmt extends Statement {
 	}
 
 	draw(cursor: Cursor, depth: number): void {
-		cursor.printLine("IF " + this.text, depth);
+		cursor.printLine(`IF ${this.text}`, depth);
 		this.thenPart.draw(cursor, depth+1);
 	}
 
@@ -751,7 +751,7 @@ class IfElseStmt extends Statement {
 	}
 
 	draw(cursor: Cursor, depth: number): void {
-		cursor.printLine("IF " + this.text, depth);
+		cursor.printLine(`IF ${this.text}`, depth);
 		this.thenPart.draw(cursor, depth+1);
 		if (this.elseBlock) {
 			cursor.printLine("ELSE", depth);
@@ -1012,7 +1012,7 @@ class Activation {
 				ctx.font = "12px Arial";
 				ctx.fillStyle = "#444";
 				if (typeof sizeName !== 'undefined')
-					ctx.fillText(sizeName + " = " + len, x, y);
+					ctx.fillText(`${sizeName} = ${len}`, x, y);
 				for (let i: number = 0; i < len; i++)
 					ctx.fillText(String(i), x + (i+1)*codeParams.cellWidth - 10, y);
 				y += 10;

@@ -12,7 +12,7 @@ function regexLanguage(element_id: string, re_text: string): void {
 	try {
 		text = showLanguage(150, new CharScanner(re_text).allExpr());
 	} catch (err) {
-		text = "<em>Malformed expression: " + err + "</em>";
+		text = `<em>Malformed expression: ${err}</em>`;
 	}
 	document.getElementById(element_id).innerHTML = text;
 }
@@ -33,7 +33,7 @@ function showLanguage(n: number, e: Regexp): string {
 	}
 	if (ss[0] == "")
 		ss[0] = "ε";
-	return "{ " + ss.join(", ") + " }";
+	return `{ ${ss.join(", ")} }`;
 }
 
 // Scanner for recursive descent parser for regular expressions
@@ -64,8 +64,7 @@ class CharScanner {
 	match(t: string): void {
 		const c: string = this.get();
 		if (c != t)
-			this.fail("'" + c + "' found when expecting '" +
-				t + "'");
+			this.fail(`'${c}' found when expecting '${t}'`);
 		this.advance();
 	}
 
@@ -73,7 +72,7 @@ class CharScanner {
 	allExpr(): Regexp {
 		const e: Regexp = this.expr();
 		if (this.get() != '')
-			this.fail("unexpected '" + this.get() + "'");
+			this.fail(`unexpected '${this.get()}'`);
 		return e;
 	}
 
