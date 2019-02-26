@@ -348,6 +348,17 @@ function term(sc: Scanner): Expression {
 		}
 }
 
+//	factor	= '-' factor
+//		| '(' expr ')'
+//		| number
+//		| 'true'
+//		| 'false'
+//		| id
+//		| id '(' arglist ')'
+//		| id '[' expr ']'
+//		| id '[' expr '.' '.' expr ']'
+//		| 'a' 'new' 'array' 'of' 'length' expr
+//
 function factor(sc: Scanner): Expression {
 	if (sc.token == '-') {
 		sc.advance();
@@ -364,18 +375,32 @@ function factor(sc: Scanner): Expression {
 	const matches: RegExpMatchArray = v.match(/^[0-9]+/);
 	if (matches)
 		return constFn(Number(matches[0]));
+	if (v == 'true')
+		return constFn(true);
+	if (v == 'false')
+		return constFn(false);
 	if (sc.token == '(')
 		return callFn(v, argList(sc));
 	if (sc.token == '[') {
 		sc.advance();
 		const i: Expression = expr(sc);
+		if (sc.current() == '.') {
+			sc.advance();
+			sc.match('.');
+			const j: Expression = expr(sc);
+			sc.match(']');
+			return subarrayFn(v, i, j);
+		}
 		sc.match(']');
 		return indexFn(v, i);
 	}
-	if (v == 'true')
-		return constFn(true);
-	if (v == 'false')
-		return constFn(false);
+	if (v == 'a' && sc.token == 'new') {
+		sc.advance();
+		sc.match('array');
+		sc.match('of');
+		sc.match('length');
+		return newarrayFn(expr(sc));
+	}
 	for (let param of currentParams)
 		if (param.sizeName == v)
 			return lengthFn(param.paramName);
@@ -403,6 +428,26 @@ function varFn(v: string): Expression {
 }
 function indexFn(v: string, f: Expression): Expression {
 	return function(s: Variables): Value { return s[v][f(s)]; };
+}
+function subarrayFn(v: string, f: Expression, g: Expression): Expression {
+	return function(s: Variables): Value {
+		const start: number = f(s);
+		const finish: number = g(s);
+		const a: Array<Value> = s[v];
+		let result: Array<Value> = [];
+		for (let i: number = start; i <= finish; i++)
+			result.push(a[i]);
+		return result;
+	};
+}
+function newarrayFn(f: Expression): Expression {
+	return function(s: Variables): Value {
+		const size: number = f(s);
+		let result: Array<Value> = [];
+		for (let i: number = 0; i < size; i++)
+			result.push('');
+		return result;
+	};
 }
 function andFn(f: Expression, g: Expression): Expression {
 	return function(s: Variables): boolean { return f(s) && g(s); };
@@ -912,7 +957,7 @@ class Procedure {
 		for (let param of this.params)
 			if (param.paramName == aname)
 				return param.sizeName;
-		return "N";
+		return undefined;
 	}
 
 	// default colour scheme for arrays
@@ -977,9 +1022,8 @@ class Activation {
 		const codeHeight: number = codeParams.headerHeight + (this.code.size + 2)*codeParams.lineSpacing;
 		let stateHeight: number = codeParams.cellHeight;
 		for (let v in this.locals) {
-			stateHeight += 50;
-			if (this.locals[v] instanceof Array)
-				stateHeight += 10;
+			if (this.locals.hasOwnProperty(v))
+				stateHeight += 50;
 		}
 		this.displayHeight = codeHeight > stateHeight ? codeHeight : stateHeight;
 	}
@@ -1012,10 +1056,9 @@ class Activation {
 				ctx.font = "12px Arial";
 				ctx.fillStyle = "#444";
 				if (typeof sizeName !== 'undefined')
-					ctx.fillText(`${sizeName} = ${len}`, x, y);
+					ctx.fillText(`${sizeName} = ${len}`, x, y-8);
 				for (let i: number = 0; i < len; i++)
-					ctx.fillText(String(i), x + (i+1)*codeParams.cellWidth - 10, y);
-				y += 10;
+					ctx.fillText(String(i), x + (i+1)*codeParams.cellWidth - 10, y-8);
 			}
 			ctx.font = "16px Arial";
 			ctx.fillStyle = "black";
