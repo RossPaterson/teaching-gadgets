@@ -1,5 +1,7 @@
 /// <reference path="applet.ts" />
 
+namespace SubsetSumAppletImpl {
+
 const subsetParams = {
 	maxValue: 99,
 	inColor: "#000",
@@ -20,7 +22,7 @@ class Entry {
 	}
 }
 
-class SubsetSumApplet extends Applet {
+export class SubsetSumApplet extends Applet {
 	private capacity: number;
 	private array: Array<Entry>;
 
@@ -117,3 +119,7 @@ function drawSelection(elem: HTMLCanvasElement, arr: Array<Entry>, capacity: num
 	ctx.fillStyle = total <= capacity ? subsetParams.goodColor : subsetParams.badColor;
 	ctx.fillText(String(total), (2*arr.length + 1)*width / (2*ncells), ypos);
 }
+
+} // namespace SubsetSumAppletImpl
+
+import SubsetSumApplet = SubsetSumAppletImpl.SubsetSumApplet

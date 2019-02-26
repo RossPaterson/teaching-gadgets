@@ -1,5 +1,14 @@
 /// <reference path="applet.ts" />
 
+type Value = any;
+interface Dictionary<T> { [varName: string]: T; }
+
+// built-in procedures and functions
+let builtIn: Dictionary<(...rest: Value[]) => Value> = {};
+builtIn.Swap = ArrayUtilities.swap;
+
+namespace CodeAppletImpl {
+
 const codeParams = {
 	timeStep: 1000, // in milliseconds
 	// rendering parameters
@@ -17,12 +26,7 @@ const codeParams = {
 	stateColour: "#eeccaa"
 };
 
-interface Dictionary<T> { [varName: string]: T; }
 function emptyDictionary<T>(): Dictionary<T> { return {}; }
-
-// built-in procedures and functions
-let builtIn = emptyDictionary<(...rest: Value[]) => Value>();
-builtIn.Swap = ArrayUtilities.swap;
 
 type Predicate = (x: Value) => boolean;
 
@@ -44,7 +48,6 @@ interface Parameter {
 // parameters of current code, used by code parser
 let currentParams: Array<Parameter>;
 
-type Value = any;
 type Variables = Dictionary<Value>;
 
 type Parser<T> = (sc: Scanner) => T;
@@ -890,7 +893,7 @@ type Expression = (s: Variables) => Value;
 let definedProcedure = emptyDictionary<Procedure>();
 
 // get cached procedure code
-function getProcedure(codeId: string): Procedure {
+export function getProcedure(codeId: string): Procedure {
 	if (typeof definedProcedure[codeId] === 'undefined')
 		definedProcedure[codeId] = new Procedure(codeId);
 	return definedProcedure[codeId];
@@ -969,7 +972,7 @@ class Procedure {
 type ArrayColourScheme = (s: Variables, a: string, i: number) => string;
 
 // colour scheme for stepping through an array from left to right
-function leftToRightColour(arr: string, ix: number): ArrayColourScheme {
+export function leftToRightColour(arr: string, ix: number): ArrayColourScheme {
 	return function(state: Variables, aname: string, i: number) {
 		if (aname == arr) {
 			let curr = state[ix];
@@ -1254,7 +1257,7 @@ class Machine {
 }
 
 // Applet for stepping through the execution of pseudocode
-class CodeApplet extends Applet {
+export class CodeApplet extends Applet {
 	private state: Machine;
 	private timeout: any;
 
@@ -1368,3 +1371,9 @@ function cloneValue(obj: Value): Value {
 
 	throw new Error("Unable to copy obj! Its type isn't supported.");
 }
+
+} // namespace CodeAppletImpl
+
+import CodeApplet = CodeAppletImpl.CodeApplet;
+import getProcedure = CodeAppletImpl.getProcedure;
+import leftToRightColour = CodeAppletImpl.leftToRightColour;

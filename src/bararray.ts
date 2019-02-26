@@ -1,5 +1,7 @@
 /// <reference path="applet.ts" />
 
+namespace BarArrayAppletImpl {
+
 // Marking some entries for highlighting
 
 // Selected entry for an operation
@@ -24,7 +26,7 @@ class ArrayDone {
 }
 
 // Presentation of an array as a collection of bars
-class BarArrayApplet extends Applet {
+export class BarArrayApplet extends Applet {
 	private readonly selection: ArraySelection;
 	private readonly done: ArrayDone;
 	private readonly array: Array<number>;
@@ -122,7 +124,7 @@ function newArray(n: number): Array<number> {
 }
 
 // length of ordered prefix
-function initOrdered(arr: Array<number>): number {
+export function initOrdered(arr: Array<number>): number {
 	let i: number = 1;
 	while (i < arr.length && arr[i-1] <= arr[i]) {
 		i++;
@@ -131,7 +133,7 @@ function initOrdered(arr: Array<number>): number {
 }
 
 // length of prefix of smallest elements
-function initLeast(arr: Array<number>): number {
+export function initLeast(arr: Array<number>): number {
 	let min: number = initOrdered(arr);
 	const len: number = arr.length;
 	for (let i: number = min; i < len; i++) {
@@ -141,3 +143,9 @@ function initLeast(arr: Array<number>): number {
 	}
 	return min;
 }
+
+} // namespace BarArrayAppletImpl
+
+import BarArrayApplet = BarArrayAppletImpl.BarArrayApplet
+import initOrdered = BarArrayAppletImpl.initOrdered
+import initLeast = BarArrayAppletImpl.initLeast

@@ -1,3 +1,5 @@
+namespace RegexImpl {
+
 // Set content of the identified DOM element to the language denoted by
 // the regular expression text.
 //
@@ -7,7 +9,7 @@
 //
 // The input field accepts basic regular expressions with alphanumeric
 // characters and meta-characters |, *, ( and ).
-function regexLanguage(element_id: string, re_text: string): void {
+export function regexLanguage(element_id: string, re_text: string): void {
 	let text: string = "";
 	try {
 		text = showLanguage(150, new CharScanner(re_text).allExpr());
@@ -348,3 +350,7 @@ function catLang(xs: Array<string>, ys: Array<string>): Array<string> {
 	}
 	return all;
 }
+
+} // namespace RegexImpl
+
+import regexLanguage = RegexImpl.regexLanguage;
