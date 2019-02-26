@@ -114,7 +114,7 @@ namespace ArrayUtilities {
 	// value at pos, returning the final position of the pivot.
 	export function partition<T>(arr: Array<T>, pos: number,
 			lo: number, hi: number): number {
-		const pivot: T = arr[lo];
+		const pivot: T = arr[pos];
 		// move the selected pivot to the start
 		swap(arr, lo, pos);
 		// partition the rest of the range
@@ -138,5 +138,5 @@ namespace ArrayUtilities {
 }
 
 // backward compatibility
-const swap = ArrayUtilities.swap;
-const move = ArrayUtilities.move;
+import swap = ArrayUtilities.swap;
+import move = ArrayUtilities.move;
