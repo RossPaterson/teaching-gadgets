@@ -80,33 +80,63 @@ function getMouseY(event: MouseEvent): number {
 		document.documentElement.scrollTop;
 }
 
-// array utilities
+namespace ArrayUtilities {
+	// Fisher-Yates shuffle
+	export function shuffle<T>(arr: Array<T>): void {
+		const n: number = arr.length;
+		for (let i: number = 0; i < n; i++) {
+			const j: number = i + Math.floor(Math.random()*(n - i));
+			if (j != i)
+				swap(arr, i, j);
+		}
+	}
 
-// Fisher-Yates shuffle
-function shuffle<T>(arr: Array<T>): void {
-	const n: number = arr.length;
-	for (let i: number = 0; i < n; i++) {
-		const j: number = i + Math.floor(Math.random()*(n - i));
-		if (j != i)
-			swap(arr, i, j);
+	// Swap entries at i and j in arr.
+	export function swap<T>(arr: Array<T>, i: number, j: number): void {
+		const tmp: T = arr[i];
+		arr[i] = arr[j];
+		arr[j] = tmp;
+	}
+
+	// Move an entry from one position in an array to another,
+	// bumping intervening entries along to make room.
+	export function move<T>(arr: Array<T>, from: number, to: number): void {
+		const step: number = Math.sign(to - from);
+		if (step != 0) {
+			const tmp = arr[from];
+			for (let i = from; i != to; i = i + step)
+				arr[i] = arr[i + step];
+			arr[to] = tmp;
+		}
+	}
+
+	// Partition the part of the array from lo to hi based on a pivot
+	// value at pos, returning the final position of the pivot.
+	export function partition<T>(arr: Array<T>, pos: number,
+			lo: number, hi: number): number {
+		const pivot: T = arr[lo];
+		// move the selected pivot to the start
+		swap(arr, lo, pos);
+		// partition the rest of the range
+		let i: number = lo+1;
+		let j: number = hi;
+		while (i <= j) {
+			while (i <= j && arr[i] <= pivot)
+				i++;
+			while (j >= i && arr[j] >= pivot)
+				j--;
+			if (i < j) {
+				swap(arr, i, j);
+				i++;
+				j--;
+			}
+		}
+		// move the pivot to the middle
+		swap(arr, lo, j);
+		return j;
 	}
 }
 
-// Swap entries at i and j in arr.
-function swap<T>(arr: Array<T>, i: number, j: number): void {
-	const tmp: T = arr[i];
-	arr[i] = arr[j];
-	arr[j] = tmp;
-}
-
-// Move an entry from one position in an array to another,
-// bumping intervening entries along to make room.
-function move<T>(arr: Array<T>, from: number, to: number): void {
-	const step: number = Math.sign(to - from);
-	if (step != 0) {
-		const tmp = arr[from];
-		for (let i = from; i != to; i = i + step)
-			arr[i] = arr[i + step];
-		arr[to] = tmp;
-	}
-}
+// backward compatibility
+const swap = ArrayUtilities.swap;
+const move = ArrayUtilities.move;

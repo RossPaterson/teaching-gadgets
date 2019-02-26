@@ -22,7 +22,7 @@ function emptyDictionary<T>(): Dictionary<T> { return {}; }
 
 // built-in procedures and functions
 let builtIn = emptyDictionary<(...rest: Value[]) => Value>();
-builtIn.Swap = swap;
+builtIn.Swap = ArrayUtilities.swap;
 
 type Predicate = (x: Value) => boolean;
 

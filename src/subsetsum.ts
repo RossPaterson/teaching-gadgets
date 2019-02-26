@@ -85,7 +85,7 @@ function newProblem(size: number, capacity: number): Array<Entry> {
 			arr.push(new Entry(value, false));
 		}
 	}
-	shuffle(arr);
+	ArrayUtilities.shuffle(arr);
 	return arr;
 }
 

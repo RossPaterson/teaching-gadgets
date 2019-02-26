@@ -48,7 +48,7 @@ class BarArrayApplet extends Applet {
 	}
 
 	reset(): void {
-		shuffle(this.array);
+		ArrayUtilities.shuffle(this.array);
 		this.selection.clear();
 		this.done.clear();
 		this.changed();
