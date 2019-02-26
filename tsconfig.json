@@ -1,14 +1,15 @@
 {
     "compilerOptions": {
         "lib": ["dom", "es2015"],
-        "noImplicitAny": true,
-        "noImplicitThis": true,
         "alwaysStrict": true,
         "strictBindCallApply": true,
         "strictFunctionTypes": true,
+        "noImplicitAny": true,
         "noFallthroughCasesInSwitch": true,
         "noUnusedLocals": true,
         "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "removeComments": true,
         "outDir" : "built",
         "noEmitOnError": true
     },
