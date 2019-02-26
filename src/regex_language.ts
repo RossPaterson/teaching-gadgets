@@ -220,18 +220,6 @@ function* catAll<T>(xss: Iterator<Array<T>>): Iterator<T> {
 	}
 }
 
-// consumes the argument iterator
-function take<T>(n: number, xs: Iterator<T>): Array<T> {
-	let list: Array<T> = [];
-	let curr_x: IteratorResult<T> = xs.next();
-	while (n > 0 && ! curr_x.done) {
-		list.push(curr_x.value);
-		curr_x = xs.next();
-		n--;
-	}
-	return list;
-}
-
 // consumes the argument iterators
 function* longZip<T>(f: (x: T, y: T) => T, xs: Iterator<T>, ys: Iterator<T>): Iterator<T> {
 	let curr_x: IteratorResult<T> = xs.next();
