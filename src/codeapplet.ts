@@ -208,6 +208,8 @@ function parameter(sc: Scanner): Parameter {
 
 // Recursive descent parser for pseudocode
 
+//	block	= '{' stmtlist '}'
+
 function block(sc: Scanner): Block {
 	sc.match('{');
 	const stmts = stmtlist(sc);
@@ -230,12 +232,12 @@ function stmtlist(sc: Scanner): Block {
 //		| IF expr block (ELSE (block | stmt))?
 //		| RETURN expr
 //		| ident '(' arglist ')'
-//		| lhs '⇽' ident '(' arglist ')'
+//		| lhs '←' ident '(' arglist ')'
 //		| lhs '←' expr
 //
 //	lhs	= ident
 //		| ident '[' expr ']'
-//
+
 function stmt(sc: Scanner): Statement {
 	const v: string = sc.token;
 	if (v == 'WHILE') {
@@ -266,7 +268,7 @@ function stmt(sc: Scanner): Statement {
 	const line: string = sc.currLine;
 	sc.advance();
 	if (sc.token == '(')
-		return new CallStmt(line, v, argList(sc));
+		return new CallStmt(line, v, arglist(sc));
 	let lhs: Assignment;
 	if (sc.token == '[') {
 		sc.advance();
@@ -280,10 +282,12 @@ function stmt(sc: Scanner): Statement {
 	if (/^[a-zA-Z]\w*$/.test(sc.token) && /^ *[(]/.test(sc.peek())) {
 		const pname: string = sc.token;
 		sc.advance();
-		return new AssignCallStmt(line, v, lhs, pname, argList(sc));
+		return new AssignCallStmt(line, v, lhs, pname, arglist(sc));
 	}
 	return new AssignStmt(line, v, lhs, expr(sc));
 }
+
+//	expr	= disjunct ('OR' disjunct)*
 
 function expr(sc: Scanner): Expression {
 	let d: Expression = disjunct(sc);
@@ -294,6 +298,8 @@ function expr(sc: Scanner): Expression {
 	return d;
 }
 
+//	disjunct = conjunct ('AND' conjunct)*
+
 function disjunct(sc: Scanner): Expression {
 	let c: Expression = conjunct(sc);
 	while (sc.token == 'AND') {
@@ -302,6 +308,16 @@ function disjunct(sc: Scanner): Expression {
 	}
 	return c;
 }
+
+//	conjunct = NOT conjunct
+//		| nexpr '=' nexpr
+//		| nexpr '<' nexpr
+//		| nexpr '≤' nexpr
+//		| nexpr '≠' nexpr
+//		| nexpr '>' nexpr
+//		| nexpr '≥' nexpr
+//		| nexpr 'is' predicate
+//		| nexpr
 
 function conjunct(sc: Scanner): Expression {
 	if (sc.token == 'NOT') {
@@ -330,6 +346,8 @@ function predicate(sc: Scanner): Predicate {
 	return predicates[tok] as Predicate;
 }
 
+//	nexpr	= term ('+' term | '-' term)*
+
 function nexpr(sc: Scanner): Expression {
 	let t: Expression = term(sc);
 	while (true)
@@ -339,6 +357,8 @@ function nexpr(sc: Scanner): Expression {
 		default: return t;
 		}
 }
+
+//	term	= factor ('*' factor | 'DIV' factor | 'MOD' factor)*
 
 function term(sc: Scanner): Expression {
 	let f: Expression = factor(sc);
@@ -383,7 +403,7 @@ function factor(sc: Scanner): Expression {
 	if (v == 'false')
 		return constFn(false);
 	if (sc.token == '(')
-		return callFn(v, argList(sc));
+		return callFn(v, arglist(sc));
 	if (sc.token == '[') {
 		sc.advance();
 		const i: Expression = expr(sc);
@@ -410,7 +430,9 @@ function factor(sc: Scanner): Expression {
 	return varFn(v);
 }
 
-function argList(sc: Scanner): Array<Expression> {
+//	arglist	= expr (',' expr)*
+
+function arglist(sc: Scanner): Array<Expression> {
 	sc.match('(');
 	let args: Array<Expression> = [];
 	args.push(expr(sc));
