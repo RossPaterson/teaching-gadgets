@@ -1,5 +1,13 @@
 /// <reference path="applet.ts" />
 
+// Bugs:
+// - function calls happen even if the subexpression containing them would
+//   not be executed (inside the second argument of AND or OR)
+//
+// Interface weaknesses:
+// - return values are not shown
+// - progress within statements with multiple function calls is unclear
+
 type Value = any;
 interface Dictionary<T> { [varName: string]: T; }
 
@@ -45,10 +53,18 @@ interface Parameter {
 	readonly sizeName?: string	// size parameter (for arrays only)
 }
 
-// parameters of current code, used by code parser
+// parameters of current procedure, used by code parser
 let currentParams: Array<Parameter>;
 
+// function calls on the current source line, in leftmost innermost order
+let callsOnCurrentLine: Array<FunctionCall>;
+
 type Variables = Dictionary<Value>;
+
+interface State {
+	localVars: Variables;
+	returnValues: Array<Value>;
+}
 
 type Parser<T> = (sc: Scanner) => T;
 
@@ -232,43 +248,48 @@ function stmtlist(sc: Scanner): Block {
 //		| IF expr block (ELSE (block | stmt))?
 //		| RETURN expr
 //		| ident '(' arglist ')'
-//		| lhs '←' ident '(' arglist ')'
 //		| lhs '←' expr
 //
 //	lhs	= ident
 //		| ident '[' expr ']'
 
 function stmt(sc: Scanner): Statement {
+	callsOnCurrentLine = [];
 	const v: string = sc.token;
 	if (v == 'WHILE') {
 		const line: string = sc.getRestOfLine();
 		sc.advance();
 		const cond: Expression = expr(sc);
+		const fcalls: Array<FunctionCall> = callsOnCurrentLine;
 		const body: Block = block(sc);
-		return new WhileStmt(line, cond, body);
+		return new WhileStmt(fcalls, line, cond, body);
 	}
 	if (v == 'IF') {
 		const line: string = sc.getRestOfLine();
 		sc.advance();
 		const cond: Expression = expr(sc);
+		const fcalls: Array<FunctionCall> = callsOnCurrentLine;
 		const thenPart: Block = block(sc);
 		if (sc.token != 'ELSE')
-			return new IfStmt(line, cond, thenPart);
+			return new IfStmt(fcalls, line, cond, thenPart);
 		sc.advance();
 		const else_block: boolean = sc.current() == '{';
 		const elsePart: Block =
 			else_block ? block(sc) : new Block([stmt(sc)]);
-		return new IfElseStmt(line, cond, thenPart, elsePart, else_block);
+		return new IfElseStmt(fcalls, line, cond, thenPart, elsePart, else_block);
 	}
 	if (v == 'RETURN') {
 		const line: string = sc.getRestOfLine();
 		sc.advance();
-		return new ReturnStmt(line, expr(sc));
+		const e: Expression = expr(sc);
+		return new ReturnStmt(callsOnCurrentLine, line, e);
 	}
 	const line: string = sc.currLine;
 	sc.advance();
-	if (sc.token == '(')
-		return new CallStmt(line, v, arglist(sc));
+	if (sc.token == '(') {
+		const args: Array<Expression> = arglist(sc);
+		return new CallStmt(callsOnCurrentLine, line, v, args);
+	}
 	let lhs: Assignment;
 	if (sc.token == '[') {
 		sc.advance();
@@ -278,13 +299,8 @@ function stmt(sc: Scanner): Statement {
 	} else
 		lhs = assignVariable(v);
 	sc.match('←');
-	// hack: look ahead to recognize function call rhs
-	if (/^[a-zA-Z]\w*$/.test(sc.token) && /^ *[(]/.test(sc.peek())) {
-		const pname: string = sc.token;
-		sc.advance();
-		return new AssignCallStmt(line, v, lhs, pname, arglist(sc));
-	}
-	return new AssignStmt(line, v, lhs, expr(sc));
+	const rhs: Expression = expr(sc);
+	return new AssignStmt(callsOnCurrentLine, line, v, lhs, rhs);
 }
 
 //	expr	= disjunct ('OR' disjunct)*
@@ -446,19 +462,19 @@ function arglist(sc: Scanner): Array<Expression> {
 
 // operations on state functions
 function constFn(n: Value): Expression {
-	return function(s: Variables): Value { return n; };
+	return function(s: State): Value { return n; };
 }
 function varFn(v: string): Expression {
-	return function(s: Variables): Value { return s[v]; };
+	return function(s: State): Value { return s.localVars[v]; };
 }
 function indexFn(v: string, f: Expression): Expression {
-	return function(s: Variables): Value { return s[v][f(s)]; };
+	return function(s: State): Value { return s.localVars[v][f(s)]; };
 }
 function subarrayFn(v: string, f: Expression, g: Expression): Expression {
-	return function(s: Variables): Value {
+	return function(s: State): Value {
 		const start: number = f(s);
 		const finish: number = g(s);
-		const a: Array<Value> = s[v];
+		const a: Array<Value> = s.localVars[v];
 		let result: Array<Value> = [];
 		for (let i: number = start; i <= finish; i++)
 			result.push(a[i]);
@@ -466,7 +482,7 @@ function subarrayFn(v: string, f: Expression, g: Expression): Expression {
 	};
 }
 function newarrayFn(f: Expression): Expression {
-	return function(s: Variables): Value {
+	return function(s: State): Value {
 		const size: number = f(s);
 		let result: Array<Value> = [];
 		for (let i: number = 0; i < size; i++)
@@ -475,52 +491,52 @@ function newarrayFn(f: Expression): Expression {
 	};
 }
 function andFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): boolean { return f(s) && g(s); };
+	return function(s: State): boolean { return f(s) && g(s); };
 }
 function orFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): boolean { return f(s) || g(s); };
+	return function(s: State): boolean { return f(s) || g(s); };
 }
 function notFn(f: Expression): Expression {
-	return function(s: Variables): boolean { return ! f(s); };
+	return function(s: State): boolean { return ! f(s); };
 }
 function eqFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): boolean { return f(s) == g(s); };
+	return function(s: State): boolean { return f(s) == g(s); };
 }
 function neFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): boolean { return f(s) != g(s); };
+	return function(s: State): boolean { return f(s) != g(s); };
 }
 function ltFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): boolean { return f(s) < g(s); };
+	return function(s: State): boolean { return f(s) < g(s); };
 }
 function leFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): boolean { return f(s) <= g(s); };
+	return function(s: State): boolean { return f(s) <= g(s); };
 }
 function gtFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): boolean { return f(s) > g(s); };
+	return function(s: State): boolean { return f(s) > g(s); };
 }
 function geFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): boolean { return f(s) >= g(s); };
+	return function(s: State): boolean { return f(s) >= g(s); };
 }
 function lengthFn(v: string): Expression {
-	return function(s: Variables): number { return s[v].length; };
+	return function(s: State): number { return s.localVars[v].length; };
 }
 function negateFn(f: Expression): Expression {
-	return function(s: Variables): number { return - f(s); };
+	return function(s: State): number { return - f(s); };
 }
 function plusFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): number { return f(s) + g(s); };
+	return function(s: State): number { return f(s) + g(s); };
 }
 function minusFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): number { return f(s) - g(s); };
+	return function(s: State): number { return f(s) - g(s); };
 }
 function multFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): number { return f(s) * g(s); };
+	return function(s: State): number { return f(s) * g(s); };
 }
 function divFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): number { return Math.floor(f(s) / g(s)); };
+	return function(s: State): number { return Math.floor(f(s) / g(s)); };
 }
 function modFn(f: Expression, g: Expression): Expression {
-	return function(s: Variables): number {
+	return function(s: State): number {
 		const x = f(s);
 		const y = g(s);
 		const d = Math.floor(x / y);
@@ -528,35 +544,43 @@ function modFn(f: Expression, g: Expression): Expression {
 	};
 }
 function predFn(p: Predicate, f: Expression): Expression {
-	return function(s: Variables) { return p(f(s)); };
+	return function(s: State) { return p(f(s)); };
 }
 
 function callFn(name: string, args: Array<Expression>): Expression {
-	return function(s: Variables) {
-		return builtIn[name].apply(null, evalArgs(s, args));
+	if (typeof builtIn[name] !== 'undefined')
+		return function(s: State) {
+			return builtIn[name].apply(null, evalArgs(s, args));
+		};
+	const fn = callsOnCurrentLine.length;
+	callsOnCurrentLine.push(new FunctionCall(name, args));
+	return function(s: State): Value {
+		return s.returnValues[fn];
 	};
 }
 
 // store the value somewhere among the variables
-type Assignment = (s: Variables, v: Value) => void;
-
-function discardValue(s: Variables, v: Value): void {}
+type Assignment = (s: State, v: Value) => void;
 
 // store in the named variable
 function assignVariable(x: string): Assignment {
-	return function(s: Variables, v: Value): void { s[x] = v; };
+	return function(s: State, v: Value): void {
+		s.localVars[x] = v;
+	};
 }
 
 // store at index in the named array variable
 function assignArrayElement(a: string, ix: Expression): Assignment {
-	return function(s: Variables, v: Value): void { s[a][ix(s)] = v; };
+	return function(s: State, v: Value): void {
+		s.localVars[a][ix(s)] = v;
+	};
 }
 
-function evalArgs(state: Variables, args: Array<Expression>): Array<Value> {
-	let values: Array<Value> = [];
+function evalArgs(state: State, args: Array<Expression>): Array<Value> {
+	let actuals: Array<Value> = [];
 	for (let arg of args)
-		values.push(arg(state));
-	return values;
+		actuals.push(arg(state));
+	return actuals;
 }
 
 // Statements
@@ -565,6 +589,9 @@ abstract class Statement {
 	// number of textual lines in the statement
 	readonly size: number;
 
+	// function calls in the first line of the statement
+	readonly fcalls: Array<FunctionCall>;
+
 	// line number of the statement to execute after one step
 	protected next: number;
 
@@ -572,8 +599,9 @@ abstract class Statement {
 	// (control statements only)
 	protected succ: number;
 
-	constructor(size: number) {
+	constructor(size: number, fcalls: Array<FunctionCall>) {
 		this.size = size;
+		this.fcalls = fcalls;
 	}
 
 	// use the cursor to draw the statement with a given nesting
@@ -598,8 +626,8 @@ class AssignStmt extends Statement {
 	private readonly lhs: Assignment;
 	private readonly rhs: Expression;
 
-	constructor(text: string, variable: string, lhs: Assignment, rhs: Expression) {
-		super(1);
+	constructor(fcalls: Array<FunctionCall>, text: string, variable: string, lhs: Assignment, rhs: Expression) {
+		super(1, fcalls);
 		this.text = text;
 		this.variable = variable;
 		this.lhs = lhs;
@@ -619,9 +647,9 @@ class AssignStmt extends Statement {
 	}
 
 	execute(state: Machine): void {
-		const s: Variables = state.stack.locals;
+		const s: State = state.stack.localValues;
 		this.lhs(s, this.rhs(s));
-		state.stack.pc = this.next;
+		state.stack.setPC(this.next);
 	}
 }
 
@@ -629,8 +657,8 @@ class ReturnStmt extends Statement {
 	private readonly text: string;
 	private readonly expr: Expression;
 
-	constructor(text: string, expr: Expression) {
-		super(1);
+	constructor(fcalls: Array<FunctionCall>, text: string, expr: Expression) {
+		super(1, fcalls);
 		this.text = text;
 		this.expr = expr;
 	}
@@ -646,7 +674,7 @@ class ReturnStmt extends Statement {
 	addLocals(state: Variables): void {}
 
 	execute(state: Machine): void {
-		state.returnValue(this.expr(state.stack.locals));
+		state.returnValue(this.expr(state.stack.localValues));
 	}
 }
 
@@ -655,8 +683,8 @@ class CallStmt extends Statement {
 	private readonly pname: string;
 	private readonly args: Array<Expression>;
 
-	constructor(text: string, pname: string, args: Array<Expression>) {
-		super(1);
+	constructor(fcalls: Array<FunctionCall>, text: string, pname: string, args: Array<Expression>) {
+		super(1, fcalls);
 		this.text = text;
 		this.pname = pname;
 		this.args = args;
@@ -674,12 +702,11 @@ class CallStmt extends Statement {
 
 	execute(state: Machine): void {
 		const args: Array<Value> =
-			evalArgs(state.stack.locals, this.args);
+			evalArgs(state.stack.localValues, this.args);
 		if (this.pname in builtIn) {
 			builtIn[this.pname].apply(null, args);
-			state.stack.pc = this.next;
+			state.stack.setPC(this.next);
 		} else {
-			state.stack.assignReturnValue = discardValue;
 			state.stack.returnAddress = this.next;
 			const proc: Procedure = getProcedure(this.pname);
 			const vars = proc.parameterValues(args);
@@ -688,52 +715,13 @@ class CallStmt extends Statement {
 	}
 }
 
-class AssignCallStmt extends Statement {
-	private readonly text: string;
-	private readonly variable: string;
-	private readonly lhs: Assignment;
-	private readonly pname: string;
-	private readonly args: Array<Expression>;
-
-	constructor(text: string, variable: string, lhs: Assignment, pname: string, args: Array<Expression>) {
-		super(1);
-		this.text = text;
-		this.variable = variable;
-		this.lhs = lhs;
-		this.pname = pname;
-		this.args = args;
-	}
-
-	draw(cursor: Cursor, depth: number): void {
-		cursor.printLine(this.text, depth);
-	}
-
-	patch(start: number, succ: number): void { this.next = succ; }
-
-	getStmt(offset: number): Statement { return this; }
-
-	addLocals(state: Variables): void {
-		addVariable(state, this.variable);
-	}
-
-	execute(state: Machine): void {
-		const args: Array<Value> =
-			evalArgs(state.stack.locals, this.args);
-		state.stack.assignReturnValue = this.lhs;
-		state.stack.returnAddress = this.next;
-		const proc: Procedure = getProcedure(this.pname);
-		const vars = proc.parameterValues(args);
-		state.callProcedure(proc, vars);
-	}
-}
-
 class WhileStmt extends Statement {
 	private readonly text: string;
 	private readonly cond: Expression;
 	private readonly body: Block;
 
-	constructor(text: string, cond: Expression, body: Block) {
-		super(body.size + 1);
+	constructor(fcalls: Array<FunctionCall>, text: string, cond: Expression, body: Block) {
+		super(body.size + 1, fcalls);
 		this.text = text;
 		this.cond = cond;
 		this.body = body;
@@ -759,8 +747,7 @@ class WhileStmt extends Statement {
 	}
 
 	execute(state: Machine): void {
-		state.stack.pc =
-			this.cond(state.stack.locals) ? this.next : this.succ;
+		state.stack.setPC(this.cond(state.stack.localValues) ? this.next : this.succ);
 	}
 }
 
@@ -769,8 +756,8 @@ class IfStmt extends Statement {
 	private readonly cond: Expression;
 	private readonly thenPart: Block;
 
-	constructor(text: string, cond: Expression, thenPart: Block) {
-		super(thenPart.size + 1);
+	constructor(fcalls: Array<FunctionCall>, text: string, cond: Expression, thenPart: Block) {
+		super(thenPart.size + 1, fcalls);
 		this.text = text;
 		this.cond = cond;
 		this.thenPart = thenPart;
@@ -798,8 +785,7 @@ class IfStmt extends Statement {
 	}
 
 	execute(state: Machine): void {
-		state.stack.pc =
-			this.cond(state.stack.locals) ? this.next : this.succ;
+		state.stack.setPC(this.cond(state.stack.localValues) ? this.next : this.succ);
 	}
 }
 
@@ -811,8 +797,8 @@ class IfElseStmt extends Statement {
 	private readonly elseBlock: boolean; // else part on new line
 	private elseLabel: number;
 
-	constructor(text: string, cond: Expression, thenPart: Block, elsePart: Block, elseBlock: boolean) {
-		super(thenPart.size + (elseBlock ? 2 : 1) + elsePart.size);
+	constructor(fcalls: Array<FunctionCall>, text: string, cond: Expression, thenPart: Block, elsePart: Block, elseBlock: boolean) {
+		super(thenPart.size + (elseBlock ? 2 : 1) + elsePart.size, fcalls);
 		this.text = text;
 		this.cond = cond;
 		this.thenPart = thenPart;
@@ -855,8 +841,8 @@ class IfElseStmt extends Statement {
 	}
 
 	execute(state: Machine): void {
-		state.stack.pc = this.cond(state.stack.locals) ?
-			this.next : this.elseLabel;
+		state.stack.setPC(this.cond(state.stack.localValues) ?
+			this.next : this.elseLabel);
 	}
 }
 
@@ -909,7 +895,17 @@ class Block {
 }
 
 // Interpretation of an expression
-type Expression = (s: Variables) => Value;
+type Expression = (s: State) => Value;
+
+class FunctionCall {
+	readonly fname: string;
+	readonly args: Array<Expression>;
+
+	constructor(fname: string, args: Array<Expression>) {
+		this.fname = fname;
+		this.args = args;
+	}
+}
 
 // parsed user-defined procedures and functions, added by getProcedure()
 let definedProcedure = emptyDictionary<Procedure>();
@@ -1015,13 +1011,13 @@ class Activation {
 	readonly codeOffset: number;
 	// copy of local variables before current step
 	private savedLocals: Variables;
+	// line number of current statement
+	private pc: number;
 
 	readonly caller: Activation;
 	readonly code: Procedure;
 	readonly displayHeight: number;
-	locals: Variables;
-	pc: number;
-	assignReturnValue: Assignment;
+	localValues: State;
 	returnAddress: number;
 
 	constructor(code: Procedure, args: Variables, caller: Activation) {
@@ -1029,8 +1025,8 @@ class Activation {
 		this.code = code;
 		this.pc = 0;
 
-		this.locals = args;
-		code.addLocals(this.locals);
+		this.localValues = { localVars: args, returnValues: [] };
+		code.addLocals(this.localValues.localVars);
 		this.saveState();
 
 		// get the length of the largest array
@@ -1042,19 +1038,25 @@ class Activation {
 		}
 		this.codeOffset = codeParams.leftMargin +
 			arrayLen*codeParams.cellWidth + codeParams.rightMargin;
-		this.assignReturnValue = discardValue;
 
 		const codeHeight: number = codeParams.headerHeight + (this.code.size + 2)*codeParams.lineSpacing;
 		let stateHeight: number = codeParams.cellHeight;
-		for (let v in this.locals) {
-			if (this.locals.hasOwnProperty(v))
+		for (let v in this.localValues.localVars) {
+			if (this.localValues.localVars.hasOwnProperty(v))
 				stateHeight += 50;
 		}
 		this.displayHeight = codeHeight > stateHeight ? codeHeight : stateHeight;
 	}
 
+	getPC(): number { return this.pc; }
+
+	setPC(n: number): void {
+		this.pc = n;
+		this.localValues.returnValues = [];
+	}
+
 	saveState(): void {
-		this.savedLocals = cloneVariables(this.locals);
+		this.savedLocals = cloneVariables(this.localValues.localVars);
 	}
 
 	draw(canvas: HTMLCanvasElement, codeOffset: number, y: number): void {
@@ -1064,16 +1066,16 @@ class Activation {
 
 	private drawState(canvas: HTMLCanvasElement, ybase: number): void {
 		const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
-		const locals: Variables = this.locals;
+		const localVars: Variables = this.localValues.localVars;
 		const savedLocals: Variables = this.savedLocals;
 		const x: number = codeParams.leftMargin;
 		let y: number = ybase + codeParams.cellHeight;
 		let val;
 		let lastval;
 		let len: number;
-		for (let attr in locals) {
+		for (let attr in localVars) {
 			ctx.textAlign = "right";
-			val = locals[attr];
+			val = localVars[attr];
 			lastval = savedLocals[attr];
 			len = val instanceof Array ? val.length : 1;
 			if (val instanceof Array) {
@@ -1107,7 +1109,7 @@ class Activation {
 
 	private drawCells(ctx: CanvasRenderingContext2D, attr: string, x: number, y: number, n: number): void {
 		for (let i: number = 0; i < n; i++) {
-			ctx.fillStyle = this.code.cellColour(this.locals, attr, i);
+			ctx.fillStyle = this.code.cellColour(this.localValues.localVars, attr, i);
 			ctx.fillRect(x + i*codeParams.cellWidth, y, codeParams.cellWidth, codeParams.cellHeight);
 		}
 		ctx.lineWidth = 1;
@@ -1156,7 +1158,7 @@ class Machine {
 
 	constructor(codeId: string, args: Variables) {
 		this.stack = new Activation(getProcedure(codeId), args, null);
-		this.initState = cloneVariables(this.stack.locals);
+		this.initState = cloneVariables(this.stack.localValues.localVars);
 		this.finished = false;
 		this.depth = 0;
 	}
@@ -1173,27 +1175,37 @@ class Machine {
 	reset(): void {
 		while (this.depth > 0)
 			this.returnVoid();
-		this.stack.locals = cloneVariables(this.initState);
+		this.stack.localValues.localVars = cloneVariables(this.initState);
 		this.stack.saveState();
-		this.stack.pc = 0;
+		this.stack.setPC(0);
 		this.finished = false;
 	}
 
 	step(): void {
 		if (this.finished)
 			return;
-		const pc = this.stack.pc;
+		const pc = this.stack.getPC();
 		if (pc >= this.stack.code.size) {
 			this.returnVoid();
 			return;
 		}
-		this.stack.code.getStmt(pc).execute(this);
+		const stmt: Statement = this.stack.code.getStmt(pc);
+		const fcallsDone = this.stack.localValues.returnValues.length;
+		if (stmt.fcalls.length > fcallsDone) {
+			const fcall: FunctionCall = stmt.fcalls[fcallsDone];
+			const args: Array<Value> =
+				evalArgs(this.stack.localValues, fcall.args);
+			const proc: Procedure = getProcedure(fcall.fname);
+			const vars = proc.parameterValues(args);
+			this.callProcedure(proc, vars);
+		} else
+			stmt.execute(this);
 	}
 
 	bigStep(): void {
 		if (this.finished)
 			return;
-		const startPc: number = this.stack.pc;
+		const startPc: number = this.stack.getPC();
 		const startDepth: number = this.depth;
 		if (startPc >= this.stack.code.size) {
 			this.returnVoid();
@@ -1205,8 +1217,8 @@ class Machine {
 		} while (! this.finished &&
 			(this.depth > startDepth ||
 			 (this.depth == startDepth &&
-			  this.stack.pc > startPc &&
-			  this.stack.pc < startPc + stmt.size)));
+			  this.stack.getPC() > startPc &&
+			  this.stack.getPC() < startPc + stmt.size)));
 	}
 
 	callProcedure(proc: Procedure, vars: Variables): void {
@@ -1215,16 +1227,20 @@ class Machine {
 	}
 
 	returnValue(v: Value): void {
-		this.returnVoid();
-		if (! this.finished)
-			this.stack.assignReturnValue(this.stack.locals, v);
+		if (this.stack.caller !== null) {
+			this.stack = this.stack.caller;
+			this.depth--;
+			this.stack.localValues.returnValues.push(v);
+			this.step();
+		} else
+			this.finished = true;
 	}
 
 	returnVoid(): void {
 		if (this.stack.caller !== null) {
 			this.stack = this.stack.caller;
 			this.depth--;
-			this.stack.pc = this.stack.returnAddress;
+			this.stack.setPC(this.stack.returnAddress);
 		} else
 			this.finished = true;
 	}
