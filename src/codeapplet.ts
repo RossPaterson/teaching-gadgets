@@ -7,8 +7,8 @@
 // Interface weaknesses:
 // - return values are only shown at the top level
 // - progress within statements with multiple function calls is unclear
-// - shared arrays are not marked (but it is useful to show the different
-//   progress of different activations through the same array)
+// - shared arrays are not marked very well (but it is useful to show the
+//   different progress of different activations through the same array)
 
 type Value = any;
 interface Dictionary<T> { [varName: string]: T; }
@@ -1098,26 +1098,24 @@ class Activation {
 		this.savedLocals = cloneVariables(this.localValues.localVars);
 	}
 
-	draw(canvas: HTMLCanvasElement, codeOffset: number, y: number): void {
-		this.drawState(canvas, y);
+	draw(canvas: HTMLCanvasElement, codeOffset: number, y: number, arrays: Arrays): void {
+		this.drawState(canvas, y, arrays);
 		this.drawCode(canvas, codeOffset, y);
 	}
 
-	private drawState(canvas: HTMLCanvasElement, ybase: number): void {
+	private drawState(canvas: HTMLCanvasElement, ybase: number, arrays: Arrays): void {
 		const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
 		const localVars: Variables = this.localValues.localVars;
 		const savedLocals: Variables = this.savedLocals;
 		const x: number = codeParams.leftMargin;
 		let y: number = ybase + codeParams.cellHeight;
-		let val;
-		let lastval;
-		let len: number;
 		for (let attr in localVars) {
 			ctx.textAlign = "right";
-			val = localVars[attr];
-			lastval = savedLocals[attr];
-			len = val instanceof Array ? val.length : 1;
+			const val = localVars[attr];
+			const lastval = savedLocals[attr];
+			const len = val instanceof Array ? val.length : 1;
 			if (val instanceof Array) {
+				arrays.addArray(val, y + codeParams.cellHeight/2 - 5);
 				const sizeName: string = this.code.getSizeName(attr);
 				ctx.font = "12px Arial";
 				ctx.fillStyle = "#444";
@@ -1144,8 +1142,11 @@ class Activation {
 			}
 			y += 50;
 		}
-		if (this.result !== null)
+		if (this.result !== null) {
+			if (this.result instanceof Array)
+				arrays.addArray(this.result, y + codeParams.cellHeight/2 - 5);
 			this.drawResult(ctx, x, y, this.result);
+		}
 	}
 
 	private drawResult(ctx: CanvasRenderingContext2D, x: number, y: number, val: Value): void {
@@ -1344,11 +1345,14 @@ class Machine {
 		ctx.fillStyle = codeParams.codeColour;
 		ctx.fillRect(codeOffset, 0, canvas.width-codeOffset, canvas.height);
 
+		let arrays = new Arrays();
 		let y: number = canvas.height;
 		for (let s: Activation = this.stack; s !== null; s = s.caller) {
 			y -= s.displayHeight;
-			s.draw(canvas, codeOffset, y);
+			s.draw(canvas, codeOffset, y, arrays);
 		}
+
+		arrays.drawLinks(ctx, codeOffset);
 
 		// vertical line dividing the code from the state
 		ctx.strokeStyle = codeParams.headerColour;
@@ -1369,6 +1373,56 @@ class Machine {
 				ctx.moveTo(0, y);
 				ctx.lineTo(canvas.width, y);
 				ctx.stroke();
+			}
+		}
+	}
+}
+
+// y-positions of each drawn array (in reverse order)
+interface ArrayEntry { arr: Array<Value>; ys: Array<number>; }
+
+// record all the arrays in the current execution, and show sharing
+class Arrays {
+	private arrays: Array<ArrayEntry>;
+
+	constructor() { this.arrays = []; }
+
+	addArray(arr: Array<Value>, y:number): void {
+		for (let entry of this.arrays)
+			if (entry.arr === arr) {
+				entry.ys.push(y);
+				return;
+			}
+		this.arrays.push({ arr: arr, ys: [y] });
+	}
+
+	// draw links between shared arrays
+	drawLinks(ctx: CanvasRenderingContext2D, width: number): void {
+		let arrCount = 0;
+		for (let entry of this.arrays)
+			if (entry.ys.length > 1)
+				arrCount++;
+		if (arrCount == 0)
+			return;
+		let i = 0;
+		for (let entry of this.arrays) {
+			const ys: Array<number> = entry.ys;
+			if (ys.length > 1) {
+				const x: number = codeParams.leftMargin + entry.arr.length*codeParams.cellWidth + 1;
+				const linex = width - codeParams.rightMargin*(arrCount-i)/(arrCount+1);
+				ctx.strokeStyle = "#aaa";
+				ctx.lineWidth = 2;
+				ctx.beginPath();
+				ctx.moveTo(x, ys[0]);
+				ctx.lineTo(linex, ys[0]);
+				ctx.lineTo(linex, ys[ys.length - 1]);
+				ctx.lineTo(x, ys[ys.length - 1]);
+				for (let i = 1; i < ys.length - 1; i++) {
+					ctx.moveTo(x, ys[i]);
+					ctx.lineTo(linex, ys[i]);
+				}
+				ctx.stroke();
+				i++;
 			}
 		}
 	}
