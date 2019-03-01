@@ -5,8 +5,10 @@
 //   not be executed (inside the second argument of AND or OR)
 //
 // Interface weaknesses:
-// - return values are not shown
+// - return values are only shown at the top level
 // - progress within statements with multiple function calls is unclear
+// - shared arrays are not marked (but it is useful to show the different
+//   progress of different activations through the same array)
 
 type Value = any;
 interface Dictionary<T> { [varName: string]: T; }
@@ -45,6 +47,17 @@ const predicates: Dictionary<Predicate> = {
 	},
 	odd: function (n: number): boolean {
 		return ! Number.isInteger(n/2);
+	},
+	composite: function (n: number): boolean {
+		if (Number.isInteger(n/2))
+			return true;
+		for (let f: number = 3; f*f <= n; f += 2)
+			if (Number.isInteger(n/f))
+				return true;
+		return false;
+	},
+	prime: function (n: number): boolean {
+		return ! predicates.composite(n);
 	}
 };
 
@@ -64,6 +77,8 @@ type Variables = Dictionary<Value>;
 interface State {
 	localVars: Variables;
 	returnValues: Array<Value>;
+	// state may have grown since last setDimensions()
+	grown: boolean;
 }
 
 type Parser<T> = (sc: Scanner) => T;
@@ -487,6 +502,7 @@ function newarrayFn(f: Expression): Expression {
 		let result: Array<Value> = [];
 		for (let i: number = 0; i < size; i++)
 			result.push('');
+		s.grown = true;
 		return result;
 	};
 }
@@ -548,12 +564,21 @@ function predFn(p: Predicate, f: Expression): Expression {
 }
 
 function callFn(name: string, args: Array<Expression>): Expression {
+	// Built-in functions are executed directly
 	if (typeof builtIn[name] !== 'undefined')
 		return function(s: State) {
 			return builtIn[name].apply(null, evalArgs(s, args));
 		};
+
+	// Function calls in the current line are collected and attached
+	// to the Statement.  Before the statement is executed, these
+	// calls are evaluated and their return values placed in the
+	// returnValues component of the State.
 	const fn = callsOnCurrentLine.length;
 	callsOnCurrentLine.push(new FunctionCall(name, args));
+
+	// When the expression is evaluated, just fetch the corresponding
+	// return value.
 	return function(s: State): Value {
 		return s.returnValues[fn];
 	};
@@ -1008,7 +1033,7 @@ export function leftToRightColour(arr: string, ix: number): ArrayColourScheme {
 // Activation record for a procedure
 class Activation {
 	// horizontal display offset of the code
-	readonly codeOffset: number;
+	codeOffset: number;
 	// copy of local variables before current step
 	private savedLocals: Variables;
 	// line number of current statement
@@ -1016,35 +1041,49 @@ class Activation {
 
 	readonly caller: Activation;
 	readonly code: Procedure;
-	readonly displayHeight: number;
+	displayHeight: number;
 	localValues: State;
 	returnAddress: number;
+	result: Value;
 
 	constructor(code: Procedure, args: Variables, caller: Activation) {
 		this.caller = caller;
 		this.code = code;
 		this.pc = 0;
+		this.result = null;
 
-		this.localValues = { localVars: args, returnValues: [] };
+		this.localValues = {
+			localVars: args, returnValues: [], grown: false };
 		code.addLocals(this.localValues.localVars);
 		this.saveState();
+		this.setDimensions();
+	}
 
+	// recompute the dimensions of the display
+	setDimensions(): void {
+		let count: number = 0;
 		// get the length of the largest array
 		let arrayLen: number = 1;
-		for (let i in args) {
-			const arg: Value = args[i];
-			if (arg instanceof Array && arg.length > arrayLen)
-				arrayLen = arg.length;
+		const vars: Variables = this.localValues.localVars;
+		for (let v in vars)
+			if (vars.hasOwnProperty(v)) {
+				count++;
+				const val: Value = vars[v];
+				if (val instanceof Array && val.length > arrayLen)
+					arrayLen = val.length;
+			}
+		if (this.result !== null) {
+			count++;
+			const val: Value = this.result;
+			if (val instanceof Array && val.length > arrayLen)
+				arrayLen = val.length;
 		}
+
 		this.codeOffset = codeParams.leftMargin +
 			arrayLen*codeParams.cellWidth + codeParams.rightMargin;
 
 		const codeHeight: number = codeParams.headerHeight + (this.code.size + 2)*codeParams.lineSpacing;
-		let stateHeight: number = codeParams.cellHeight;
-		for (let v in this.localValues.localVars) {
-			if (this.localValues.localVars.hasOwnProperty(v))
-				stateHeight += 50;
-		}
+		const stateHeight: number = codeParams.cellHeight + 50*count;
 		this.displayHeight = codeHeight > stateHeight ? codeHeight : stateHeight;
 	}
 
@@ -1105,6 +1144,33 @@ class Activation {
 			}
 			y += 50;
 		}
+		if (this.result !== null)
+			this.drawResult(ctx, x, y, this.result);
+	}
+
+	private drawResult(ctx: CanvasRenderingContext2D, x: number, y: number, val: Value): void {
+		ctx.textAlign = "right";
+		ctx.font = "16px Arial";
+		ctx.fillStyle = "#c00";
+		ctx.fillText("returns", x-5, y+codeParams.baseLine);
+		const len: number = val instanceof Array ? val.length : 1;
+		if (val instanceof Array) {
+			ctx.font = "12px Arial";
+			ctx.fillStyle = "#444";
+			for (let i: number = 0; i < len; i++)
+				ctx.fillText(String(i), x + (i+1)*codeParams.cellWidth - 10, y-8);
+		}
+		ctx.fillStyle = ColourScheme.plain;
+		ctx.fillRect(x, y-5, len*codeParams.cellWidth, codeParams.cellHeight);
+		this.drawBox(ctx, x, y-5, len);
+		ctx.textAlign = "center";
+		ctx.font = "bold 16px Arial";
+		ctx.fillStyle = "red";
+		if (val instanceof Array)
+			for (let i: number = 0; i < len; i++)
+				ctx.fillText(val[i], x + (i+0.5)*codeParams.cellWidth, y+codeParams.baseLine);
+		else
+			ctx.fillText(val, x+codeParams.cellWidth/2, y+codeParams.baseLine);
 	}
 
 	private drawCells(ctx: CanvasRenderingContext2D, attr: string, x: number, y: number, n: number): void {
@@ -1112,12 +1178,16 @@ class Activation {
 			ctx.fillStyle = this.code.cellColour(this.localValues.localVars, attr, i);
 			ctx.fillRect(x + i*codeParams.cellWidth, y, codeParams.cellWidth, codeParams.cellHeight);
 		}
+		this.drawBox(ctx, x, y, n);
+	}
+
+	private drawBox(ctx: CanvasRenderingContext2D, x: number, y: number, len: number): void {
 		ctx.lineWidth = 1;
 		ctx.strokeStyle = "black";
-		ctx.strokeRect(x, y, n*codeParams.cellWidth, codeParams.cellHeight);
-		if (n > 1) {
+		ctx.strokeRect(x, y, len*codeParams.cellWidth, codeParams.cellHeight);
+		if (len > 1) {
 			ctx.beginPath();
-			for (let i: number = 1; i < n; i++) {
+			for (let i: number = 0; i < len; i++) {
 				ctx.moveTo(x + i*codeParams.cellWidth, y);
 				ctx.lineTo(x + i*codeParams.cellWidth, y + codeParams.cellHeight);
 			}
@@ -1178,6 +1248,8 @@ class Machine {
 		this.stack.localValues.localVars = cloneVariables(this.initState);
 		this.stack.saveState();
 		this.stack.setPC(0);
+		this.stack.result = null;
+		this.stack.setDimensions();
 		this.finished = false;
 	}
 
@@ -1232,8 +1304,11 @@ class Machine {
 			this.depth--;
 			this.stack.localValues.returnValues.push(v);
 			this.step();
-		} else
+		} else {
+			this.stack.result = v;
+			this.stack.setDimensions();
 			this.finished = true;
+		}
 	}
 
 	returnVoid(): void {
@@ -1253,6 +1328,11 @@ class Machine {
 	}
 
 	draw(canvas: HTMLCanvasElement): void {
+		if (this.stack.localValues.grown) {
+			this.stack.setDimensions();
+			this.stack.localValues.grown = false;
+		}
+
 		let codeOffset: number = 0;
 		for (let s: Activation = this.stack; s !== null; s = s.caller)
 			if (s.codeOffset > codeOffset)
