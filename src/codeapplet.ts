@@ -1421,6 +1421,11 @@ class Arrays {
 					ctx.moveTo(x, ys[i]);
 					ctx.lineTo(linex, ys[i]);
 				}
+				// arrowhead
+				const lasty = ys[ys.length - 1];
+				ctx.moveTo(x+8, lasty-5);
+				ctx.lineTo(x, lasty);
+				ctx.lineTo(x+8, lasty+5);
 				ctx.stroke();
 				i++;
 			}
