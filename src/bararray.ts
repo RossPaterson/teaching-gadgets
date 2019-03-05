@@ -79,7 +79,7 @@ function currentPos(elem: HTMLCanvasElement, arr: Array<number>, x: number): num
 }
 
 function drawArray(elem: HTMLCanvasElement, arr: Array<number>, sel: ArraySelection, done: ArrayDone): void {
-	const ctx: CanvasRenderingContext2D = elem.getContext("2d");
+	const ctx = elem.getContext("2d") as CanvasRenderingContext2D;
 	const width: number = elem.offsetWidth;
 	const height: number = elem.offsetHeight;
 	const margin: number = getMargin(elem);

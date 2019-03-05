@@ -92,7 +92,7 @@ function newProblem(size: number, capacity: number): Array<Entry> {
 }
 
 function drawSelection(elem: HTMLCanvasElement, arr: Array<Entry>, capacity: number): void {
-        const ctx: CanvasRenderingContext2D = elem.getContext("2d");
+        const ctx = elem.getContext("2d") as CanvasRenderingContext2D;
         const width: number = elem.offsetWidth;
         const height: number = elem.offsetHeight;
 

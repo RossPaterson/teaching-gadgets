@@ -19,8 +19,7 @@ abstract class Applet {
 	}
 
 	protected background(): void {
-		const ctx: CanvasRenderingContext2D =
-			this.canvas.getContext("2d");
+		const ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
 		const width: number = this.canvas.offsetWidth;
 		const height: number = this.canvas.offsetHeight;
 		ctx.fillStyle = this.bgColour;

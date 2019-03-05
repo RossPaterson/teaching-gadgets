@@ -16,7 +16,7 @@ export function regexLanguage(element_id: string, re_text: string): void {
 	} catch (err) {
 		text = `<em>Malformed expression: ${err}</em>`;
 	}
-	document.getElementById(element_id).innerHTML = text;
+	(document.getElementById(element_id) as HTMLElement).innerHTML = text;
 }
 
 // String representing the language denoted by e, of length at most n (approx)

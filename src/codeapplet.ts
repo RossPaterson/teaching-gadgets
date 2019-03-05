@@ -19,6 +19,8 @@ builtIn.Swap = ArrayUtilities.swap;
 
 namespace CodeAppletImpl {
 
+type Maybe<T> = T | null
+
 const codeParams = {
 	timeStep: 1000, // in milliseconds
 	// rendering parameters
@@ -103,17 +105,27 @@ class Scanner {
 
 	peek(): string { return this.str; }
 
+	private getCurrLine(): string {
+		return (this.str.match(/.*/) as RegExpMatchArray)[0];
+	}
+
+	private skipSpace(): number {
+		const match = this.str.match(/^ */) as RegExpMatchArray;
+		const len = match[0].length;
+		this.str = this.str.substr(len);
+		return len;
+	}
+
 	advance(): void {
 		if (this.pendingCloses > 0) {
 			this.pendingCloses--;
 			this.token = '}';
 			return;
 		}
-		let space = this.str.match(/^ */)[0];
-		this.str = this.str.substr(space.length);
+		let spaceLength = this.skipSpace();
 		if (this.indents.length == 0) {
-			this.currLine = this.str.match(/.*/)[0];
-			this.indents.push(space.length);
+			this.currLine = this.getCurrLine();
+			this.indents.push(spaceLength);
 		}
 		if (this.str.charAt(0) == '\r')
 			this.str = this.str.substr(1);
@@ -121,25 +133,24 @@ class Scanner {
 			// layout processing
 			do {
 				this.str = this.str.substr(1);
-				space = this.str.match(/^ */)[0];
-				this.str = this.str.substr(space.length);
+				spaceLength = this.skipSpace();
 				if (this.str.charAt(0) == '\r')
 					this.str = this.str.substr(1);
 			} while (this.str.charAt(0) == '\n');
-			this.currLine = this.str.match(/.*/)[0];
+			this.currLine = this.getCurrLine();
 			if (this.str.length > 0) {
 				const currentIndent = this.indents[this.indents.length-1];
-				if (space.length > currentIndent) {
-					this.indents.push(space.length);
+				if (spaceLength > currentIndent) {
+					this.indents.push(spaceLength);
 					this.token = '{';
-				} else if (space.length == currentIndent) {
+				} else if (spaceLength == currentIndent) {
 					this.token = ';';
 				} else {
-					while (this.indents.length > 1 && space.length < this.indents[this.indents.length-1]) {
+					while (this.indents.length > 1 && spaceLength < this.indents[this.indents.length-1]) {
 						this.indents.pop();
 						this.pendingCloses++;
 					}
-					if (space.length != this.indents[this.indents.length-1])
+					if (spaceLength != this.indents[this.indents.length-1])
 						this.fail("inconsistent indentation");
 					this.pendingCloses--;
 					this.token = '}';
@@ -177,7 +188,7 @@ class Scanner {
 	}
 
 	getRestOfLine(): string {
-		return this.str.match(/.*/)[0].trim();
+		return this.getCurrLine().trim();
 	}
 
 	just<T>(nonterm: Parser<T>): T {
@@ -426,7 +437,7 @@ function factor(sc: Scanner): Expression {
 	}
 	const v: string = sc.token;
 	sc.advance();
-	const matches: RegExpMatchArray = v.match(/^[0-9]+/);
+	const matches = v.match(/^[0-9]+/) as RegExpMatchArray;
 	if (matches)
 		return constFn(Number(matches[0]));
 	if (v == 'true')
@@ -953,7 +964,7 @@ class Procedure {
 	readonly size: number;
 
 	constructor(codeId: string) {
-		const node: HTMLElement = document.getElementById(codeId);
+		const node = document.getElementById(codeId) as HTMLElement;
 		const children = node.childNodes as NodeListOf<HTMLElement>;
 		const numChildren: number = children.length;
 		let codeText: string = '';
@@ -962,9 +973,9 @@ class Procedure {
 			const child: HTMLElement = children[i];
 			if (child.nodeType == 1) { // element
 				if (child.tagName == 'DIV' && ! this.header)
-					this.header = child.textContent;
+					this.header = child.textContent as string;
 				else if (child.tagName == 'PRE')
-					codeText += child.textContent;
+					codeText += child.textContent as string;
 			}
 		}
 		this.params = new Scanner(this.header).just(algHeader);
@@ -999,11 +1010,11 @@ class Procedure {
 	}
 
 	// get declared name of the size of the named array
-	getSizeName(aname: string): string {
+	getSizeName(aname: string): Maybe<string> {
 		for (let param of this.params)
 			if (param.paramName == aname)
-				return param.sizeName;
-		return undefined;
+				return param.sizeName ? param.sizeName : null;
+		return null;
 	}
 
 	// default colour scheme for arrays
@@ -1039,14 +1050,14 @@ class Activation {
 	// line number of current statement
 	private pc: number;
 
-	readonly caller: Activation;
+	readonly caller: Maybe<Activation>;
 	readonly code: Procedure;
 	displayHeight: number;
 	localValues: State;
 	returnAddress: number;
 	result: Value;
 
-	constructor(code: Procedure, args: Variables, caller: Activation) {
+	constructor(code: Procedure, args: Variables, caller: Maybe<Activation>) {
 		this.caller = caller;
 		this.code = code;
 		this.pc = 0;
@@ -1104,7 +1115,7 @@ class Activation {
 	}
 
 	private drawState(canvas: HTMLCanvasElement, ybase: number, arrays: Arrays): void {
-		const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
+		const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 		const localVars: Variables = this.localValues.localVars;
 		const savedLocals: Variables = this.savedLocals;
 		const x: number = codeParams.leftMargin;
@@ -1116,7 +1127,7 @@ class Activation {
 			const len = val instanceof Array ? val.length : 1;
 			if (val instanceof Array) {
 				arrays.addArray(val, y + codeParams.cellHeight/2 - 5);
-				const sizeName: string = this.code.getSizeName(attr);
+				const sizeName: Maybe<string> = this.code.getSizeName(attr);
 				ctx.font = "12px Arial";
 				ctx.fillStyle = "#444";
 				if (typeof sizeName !== 'undefined')
@@ -1197,7 +1208,7 @@ class Activation {
 	}
 
 	private drawCode(canvas: HTMLCanvasElement, x: number, ybase: number): void {
-		const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
+		const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 		const width: number = canvas.offsetWidth;
 		const y: number = ybase + codeParams.headerHeight + codeParams.lineSpacing;
 
@@ -1323,7 +1334,7 @@ class Machine {
 
 	displayHeight(): number {
 		let height: number = 0;
-		for (let s: Activation = this.stack; s !== null; s = s.caller)
+		for (let s: Maybe<Activation> = this.stack; s !== null; s = s.caller)
 			height += s.displayHeight;
 		return height;
 	}
@@ -1335,11 +1346,11 @@ class Machine {
 		}
 
 		let codeOffset: number = 0;
-		for (let s: Activation = this.stack; s !== null; s = s.caller)
+		for (let s: Maybe<Activation> = this.stack; s !== null; s = s.caller)
 			if (s.codeOffset > codeOffset)
 				codeOffset = s.codeOffset;
 
-		const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
+		const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
 		// background for the code
 		ctx.fillStyle = codeParams.codeColour;
@@ -1347,7 +1358,7 @@ class Machine {
 
 		let arrays = new Arrays();
 		let y: number = canvas.height;
-		for (let s: Activation = this.stack; s !== null; s = s.caller) {
+		for (let s: Maybe<Activation> = this.stack; s !== null; s = s.caller) {
 			y -= s.displayHeight;
 			s.draw(canvas, codeOffset, y, arrays);
 		}
@@ -1366,7 +1377,7 @@ class Machine {
 		ctx.strokeStyle = "black";
 		ctx.lineWidth = 3;
 		y = canvas.height;
-		for (let s: Activation = this.stack; s !== null; s = s.caller) {
+		for (let s: Maybe<Activation> = this.stack; s !== null; s = s.caller) {
 			y -= s.displayHeight;
 			if (s.caller !== null) {
 				ctx.beginPath();
