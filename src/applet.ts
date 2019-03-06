@@ -41,8 +41,16 @@ abstract class Applet {
 	protected mousedown(x: number, y: number): void {}
 }
 
+// Internet Explorer compatibility
+
 if (! Math.sign) {
 	Math.sign = function(x) { return x < 0 ? -1 : x > 0 ? 1 : 0; };
+}
+
+if (! Number.isInteger) {
+	Number.isInteger = function(x) {
+		return typeof x === 'number' && isFinite(x) && Math.floor(x) === x;
+	};
 }
 
 // DOM utilities
@@ -64,7 +72,7 @@ function getRadioButton(name: string): HTMLInputElement {
 // mouse utilities
 
 function getMouseX(event: MouseEvent): number {
-	if (event.x != undefined)
+	if (event.x !== undefined)
 		return event.x;
 	// Firefox version
 	return event.clientX + document.body.scrollLeft +
@@ -72,7 +80,7 @@ function getMouseX(event: MouseEvent): number {
 }
 
 function getMouseY(event: MouseEvent): number {
-	if (event.y != undefined)
+	if (event.y !== undefined)
 		return event.y;
 	// Firefox version
 	return event.clientY + document.body.scrollTop +
