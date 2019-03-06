@@ -12,7 +12,7 @@ class ArraySelection {
 
 	clear(): void { this.index = -1; }
 	isSet(): boolean { return this.index >= 0; }
-	contains(i: number): boolean { return i == this.index; }
+	contains(i: number): boolean { return i === this.index; }
 }
 
 // Initial portion already processed

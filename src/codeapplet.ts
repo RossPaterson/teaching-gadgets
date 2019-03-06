@@ -123,34 +123,34 @@ class Scanner {
 			return;
 		}
 		let spaceLength = this.skipSpace();
-		if (this.indents.length == 0) {
+		if (this.indents.length === 0) {
 			this.currLine = this.getCurrLine();
 			this.indents.push(spaceLength);
 		}
-		if (this.str.charAt(0) == '\r')
+		if (this.str.charAt(0) === '\r')
 			this.str = this.str.substr(1);
-		if (this.str.charAt(0) == '\n') {
+		if (this.str.charAt(0) === '\n') {
 			// layout processing
 			do {
 				this.str = this.str.substr(1);
 				spaceLength = this.skipSpace();
-				if (this.str.charAt(0) == '\r')
+				if (this.str.charAt(0) === '\r')
 					this.str = this.str.substr(1);
-			} while (this.str.charAt(0) == '\n');
+			} while (this.str.charAt(0) === '\n');
 			this.currLine = this.getCurrLine();
 			if (this.str.length > 0) {
 				const currentIndent = this.indents[this.indents.length-1];
 				if (spaceLength > currentIndent) {
 					this.indents.push(spaceLength);
 					this.token = '{';
-				} else if (spaceLength == currentIndent) {
+				} else if (spaceLength === currentIndent) {
 					this.token = ';';
 				} else {
 					while (this.indents.length > 1 && spaceLength < this.indents[this.indents.length-1]) {
 						this.indents.pop();
 						this.pendingCloses++;
 					}
-					if (spaceLength != this.indents[this.indents.length-1])
+					if (spaceLength !== this.indents[this.indents.length-1])
 						this.fail("inconsistent indentation");
 					this.pendingCloses--;
 					this.token = '}';
@@ -158,7 +158,7 @@ class Scanner {
 				return;
 			}
 		}
-		if (this.str.length == 0) {
+		if (this.str.length === 0) {
 			// end of input
 			while (this.indents.length > 1) {
 				this.indents.pop();
@@ -182,7 +182,7 @@ class Scanner {
 	}
 
 	match(t: string): void {
-		if (this.token != t)
+		if (this.token !== t)
 			this.fail(`'${this.token}' found when expecting '${t}'`);
 		this.advance();
 	}
@@ -193,7 +193,7 @@ class Scanner {
 
 	just<T>(nonterm: Parser<T>): T {
 		const e: T = nonterm(this);
-		if (this.token != '')
+		if (this.token !== '')
 			this.fail(`'${this.token}' found when expecting end of string`);
 		return e;
 	}
@@ -201,7 +201,7 @@ class Scanner {
 	test(): void {
 		let all = this.token;
 		this.advance();
-		while (this.token != '') {
+		while (this.token !== '') {
 			all = all + ' ' + this.token;
 			this.advance();
 		}
@@ -216,7 +216,7 @@ function algHeader(sc: Scanner): Array<Parameter> {
 	sc.match('(');
 	let params: Array<Parameter> = [];
 	params.push(parameter(sc));
-	while (sc.token == ',') {
+	while (sc.token === ',') {
 		sc.advance();
 		params.push(parameter(sc));
 	}
@@ -228,11 +228,11 @@ function algHeader(sc: Scanner): Array<Parameter> {
 function parameter(sc: Scanner): Parameter {
 	const name: string = sc.token;
 	sc.advance();
-	if (sc.token != '[')
+	if (sc.token !== '[')
 		return {paramName: name};
 	sc.advance();
 	let size: string;
-	if (sc.current() == '0') { // 0..size-1
+	if (sc.current() === '0') { // 0..size-1
 		sc.advance();
 		sc.match('.');
 		sc.match('.');
@@ -262,8 +262,8 @@ function block(sc: Scanner): Block {
 function stmtlist(sc: Scanner): Block {
 	let stmts: Array<Statement> = [];
 	stmts.push(stmt(sc));
-	while (sc.token != '}' && sc.token != '') {
-		if (sc.token == ';')
+	while (sc.token !== '}' && sc.token !== '') {
+		if (sc.token === ';')
 			sc.advance();
 		stmts.push(stmt(sc));
 	}
@@ -282,7 +282,7 @@ function stmtlist(sc: Scanner): Block {
 function stmt(sc: Scanner): Statement {
 	callsOnCurrentLine = [];
 	const v: string = sc.token;
-	if (v == 'WHILE') {
+	if (v === 'WHILE') {
 		const line: string = sc.getRestOfLine();
 		sc.advance();
 		const cond: Expression = expr(sc);
@@ -290,21 +290,21 @@ function stmt(sc: Scanner): Statement {
 		const body: Block = block(sc);
 		return new WhileStmt(fcalls, line, cond, body);
 	}
-	if (v == 'IF') {
+	if (v === 'IF') {
 		const line: string = sc.getRestOfLine();
 		sc.advance();
 		const cond: Expression = expr(sc);
 		const fcalls: Array<FunctionCall> = callsOnCurrentLine;
 		const thenPart: Block = block(sc);
-		if (sc.token != 'ELSE')
+		if (sc.token !== 'ELSE')
 			return new IfStmt(fcalls, line, cond, thenPart);
 		sc.advance();
-		const else_block: boolean = sc.current() == '{';
+		const else_block: boolean = sc.current() === '{';
 		const elsePart: Block =
 			else_block ? block(sc) : new Block([stmt(sc)]);
 		return new IfElseStmt(fcalls, line, cond, thenPart, elsePart, else_block);
 	}
-	if (v == 'RETURN') {
+	if (v === 'RETURN') {
 		const line: string = sc.getRestOfLine();
 		sc.advance();
 		const e: Expression = expr(sc);
@@ -312,12 +312,12 @@ function stmt(sc: Scanner): Statement {
 	}
 	const line: string = sc.currLine;
 	sc.advance();
-	if (sc.token == '(') {
+	if (sc.token === '(') {
 		const args: Array<Expression> = arglist(sc);
 		return new CallStmt(callsOnCurrentLine, line, v, args);
 	}
 	let lhs: Assignment;
-	if (sc.token == '[') {
+	if (sc.token === '[') {
 		sc.advance();
 		const i = expr(sc);
 		sc.match(']');
@@ -333,7 +333,7 @@ function stmt(sc: Scanner): Statement {
 
 function expr(sc: Scanner): Expression {
 	let d: Expression = disjunct(sc);
-	while (sc.token == 'OR') {
+	while (sc.token === 'OR') {
 		sc.advance();
 		d = orFn(d, disjunct(sc));
 	}
@@ -344,7 +344,7 @@ function expr(sc: Scanner): Expression {
 
 function disjunct(sc: Scanner): Expression {
 	let c: Expression = conjunct(sc);
-	while (sc.token == 'AND') {
+	while (sc.token === 'AND') {
 		sc.advance();
 		c = andFn(c, conjunct(sc));
 	}
@@ -362,7 +362,7 @@ function disjunct(sc: Scanner): Expression {
 //		| nexpr
 
 function conjunct(sc: Scanner): Expression {
-	if (sc.token == 'NOT') {
+	if (sc.token === 'NOT') {
 		sc.advance();
 		return notFn(conjunct(sc));
 	}
@@ -425,11 +425,11 @@ function term(sc: Scanner): Expression {
 //		| 'a' 'new' 'array' 'of' 'length' expr
 //
 function factor(sc: Scanner): Expression {
-	if (sc.token == '-') {
+	if (sc.token === '-') {
 		sc.advance();
 		return negateFn(factor(sc));
 	}
-	if (sc.token == '(') {
+	if (sc.token === '(') {
 		sc.advance();
 		const e: Expression = expr(sc);
 		sc.match(')');
@@ -440,16 +440,16 @@ function factor(sc: Scanner): Expression {
 	const matches = v.match(/^[0-9]+/) as RegExpMatchArray;
 	if (matches)
 		return constFn(Number(matches[0]));
-	if (v == 'true')
+	if (v === 'true')
 		return constFn(true);
-	if (v == 'false')
+	if (v === 'false')
 		return constFn(false);
-	if (sc.token == '(')
+	if (sc.token === '(')
 		return callFn(v, arglist(sc));
-	if (sc.token == '[') {
+	if (sc.token === '[') {
 		sc.advance();
 		const i: Expression = expr(sc);
-		if (sc.current() == '.') {
+		if (sc.current() === '.') {
 			sc.advance();
 			sc.match('.');
 			const j: Expression = expr(sc);
@@ -459,7 +459,7 @@ function factor(sc: Scanner): Expression {
 		sc.match(']');
 		return indexFn(v, i);
 	}
-	if (v == 'a' && sc.token == 'new') {
+	if (v === 'a' && sc.token === 'new') {
 		sc.advance();
 		sc.match('array');
 		sc.match('of');
@@ -467,7 +467,7 @@ function factor(sc: Scanner): Expression {
 		return newarrayFn(expr(sc));
 	}
 	for (let param of currentParams)
-		if (param.sizeName == v)
+		if (param.sizeName === v)
 			return lengthFn(param.paramName);
 	return varFn(v);
 }
@@ -478,7 +478,7 @@ function arglist(sc: Scanner): Array<Expression> {
 	sc.match('(');
 	let args: Array<Expression> = [];
 	args.push(expr(sc));
-	while (sc.token == ',') {
+	while (sc.token === ',') {
 		sc.advance();
 		args.push(expr(sc));
 	}
@@ -527,10 +527,10 @@ function notFn(f: Expression): Expression {
 	return function(s: State): boolean { return ! f(s); };
 }
 function eqFn(f: Expression, g: Expression): Expression {
-	return function(s: State): boolean { return f(s) == g(s); };
+	return function(s: State): boolean { return f(s) === g(s); };
 }
 function neFn(f: Expression, g: Expression): Expression {
-	return function(s: State): boolean { return f(s) != g(s); };
+	return function(s: State): boolean { return f(s) !== g(s); };
 }
 function ltFn(f: Expression, g: Expression): Expression {
 	return function(s: State): boolean { return f(s) < g(s); };
@@ -775,7 +775,7 @@ class WhileStmt extends Statement {
 	}
 
 	getStmt(offset: number): Statement {
-		return offset == 0 ? this : this.body.getStmt(offset - 1);
+		return offset === 0 ? this : this.body.getStmt(offset - 1);
 	}
 
 	addLocals(state: Variables): void {
@@ -811,7 +811,7 @@ class IfStmt extends Statement {
 	}
 
 	getStmt(offset: number): Statement {
-		if (offset == 0)
+		if (offset === 0)
 			return this;
 		return this.thenPart.getStmt(offset - 1);
 	}
@@ -864,7 +864,7 @@ class IfElseStmt extends Statement {
 	}
 
 	getStmt(offset: number): Statement {
-		if (offset == 0)
+		if (offset === 0)
 			return this;
 		if (offset > this.thenPart.size)
 			return this.elsePart.getStmt(offset - (this.elseBlock ? 2 : 1) - this.thenPart.size);
@@ -971,10 +971,10 @@ class Procedure {
 		// this.header = first DIV, codeText = all PREs
 		for (let i: number = 0; i < numChildren; i++) {
 			const child: HTMLElement = children[i];
-			if (child.nodeType == 1) { // element
-				if (child.tagName == 'DIV' && ! this.header)
+			if (child.nodeType === 1) { // element
+				if (child.tagName === 'DIV' && ! this.header)
 					this.header = child.textContent as string;
-				else if (child.tagName == 'PRE')
+				else if (child.tagName === 'PRE')
 					codeText += child.textContent as string;
 			}
 		}
@@ -1012,7 +1012,7 @@ class Procedure {
 	// get declared name of the size of the named array
 	getSizeName(aname: string): Maybe<string> {
 		for (let param of this.params)
-			if (param.paramName == aname)
+			if (param.paramName === aname)
 				return param.sizeName ? param.sizeName : null;
 		return null;
 	}
@@ -1028,12 +1028,12 @@ type ArrayColourScheme = (s: Variables, a: string, i: number) => string;
 // colour scheme for stepping through an array from left to right
 export function leftToRightColour(arr: string, ix: number): ArrayColourScheme {
 	return function(state: Variables, aname: string, i: number) {
-		if (aname == arr) {
+		if (aname === arr) {
 			let curr = state[ix];
 			if (curr !== '') {
 				if (i < curr)
 					return ColourScheme.done;
-				if (i == curr)
+				if (i === curr)
 					return ColourScheme.highlight;
 			}
 		}
@@ -1300,7 +1300,7 @@ class Machine {
 			this.step();
 		} while (! this.finished &&
 			(this.depth > startDepth ||
-			 (this.depth == startDepth &&
+			 (this.depth === startDepth &&
 			  this.stack.getPC() > startPc &&
 			  this.stack.getPC() < startPc + stmt.size)));
 	}
@@ -1413,7 +1413,7 @@ class Arrays {
 		for (let entry of this.arrays)
 			if (entry.ys.length > 1)
 				arrCount++;
-		if (arrCount == 0)
+		if (arrCount === 0)
 			return;
 		let i = 0;
 		for (let entry of this.arrays) {
@@ -1547,7 +1547,7 @@ function cloneVariables(state: Variables): Variables {
 // clone of a value
 function cloneValue(obj: Value): Value {
 	// Handle String, Number, Boolean, null or undefined
-	if (null == obj || "object" != typeof obj)
+	if (null === obj || "object" !== typeof obj)
 		return obj;
 
 	if (obj instanceof Array) {

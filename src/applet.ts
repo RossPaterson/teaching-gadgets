@@ -56,7 +56,7 @@ if (! Number.isInteger) {
 // DOM utilities
 
 function hideshow(obj: HTMLElement): void {
-	obj.style.display = obj.style.display == 'none' ? 'block' : 'none';
+	obj.style.display = obj.style.display === 'none' ? 'block' : 'none';
 }
 
 // get the checked element of a group of radio buttons
@@ -93,7 +93,7 @@ namespace ArrayUtilities {
 		const n: number = arr.length;
 		for (let i: number = 0; i < n; i++) {
 			const j: number = i + Math.floor(Math.random()*(n - i));
-			if (j != i)
+			if (j !== i)
 				swap(arr, i, j);
 		}
 	}
@@ -109,9 +109,9 @@ namespace ArrayUtilities {
 	// bumping intervening entries along to make room.
 	export function move<T>(arr: Array<T>, from: number, to: number): void {
 		const step: number = Math.sign(to - from);
-		if (step != 0) {
+		if (step !== 0) {
 			const tmp = arr[from];
-			for (let i = from; i != to; i = i + step)
+			for (let i = from; i !== to; i = i + step)
 				arr[i] = arr[i + step];
 			arr[to] = tmp;
 		}

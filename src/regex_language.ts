@@ -33,7 +33,7 @@ function showLanguage(n: number, e: Regexp): string {
 		ss.push(curr_x.value);
 		curr_x = xs.next();
 	}
-	if (ss[0] == "")
+	if (ss[0] === "")
 		ss[0] = "ε";
 	return `{ ${ss.join(", ")} }`;
 }
@@ -65,7 +65,7 @@ class CharScanner {
 
 	match(t: string): void {
 		const c: string = this.get();
-		if (c != t)
+		if (c !== t)
 			this.fail(`'${c}' found when expecting '${t}'`);
 		this.advance();
 	}
@@ -73,7 +73,7 @@ class CharScanner {
 	// whole string as a regular expression
 	allExpr(): Regexp {
 		const e: Regexp = this.expr();
-		if (this.get() != '')
+		if (this.get() !== '')
 			this.fail(`unexpected '${this.get()}'`);
 		return e;
 	}
@@ -81,7 +81,7 @@ class CharScanner {
 	// e = t ('|' t)*
 	expr(): Regexp {
 		let e: Regexp = this.term();
-		while (this.get() == '|') {
+		while (this.get() === '|') {
 			this.advance();
 			e = new OrExpr(e, this.term());
 		}
@@ -92,7 +92,7 @@ class CharScanner {
 	term(): Regexp {
 		let t: Regexp = new EmptyExpr();
 		let c: string = this.get();
-		while (c == '(' || isAlphaNum(c) || c == 'ε') {
+		while (c === '(' || isAlphaNum(c) || c === 'ε') {
 			t = new AndExpr(t, this.factor());
 			c = this.get();
 		}
@@ -105,18 +105,18 @@ class CharScanner {
 		if (isAlphaNum(c)) {
 			f = new SingleExpr(c);
 			this.advance();
-		} else if (c == '(') {
+		} else if (c === '(') {
 			this.advance();
 			f = this.expr();
 			this.match(')');
-		} else if (c == 'ε') {
+		} else if (c === 'ε') {
 			f = new EmptyExpr();
 			this.advance();
 		} else {
 			this.fail("letter or '(' expected");
 		}
 		c = this.get();
-		while (c == '*') {
+		while (c === '*') {
 			f = new StarExpr(f);
 			this.advance();
 			c = this.get();
@@ -317,21 +317,21 @@ function* starLang(l: Language): Language {
 // merge two arrays in ascending order without duplicates
 function merge(xs: Array<string>, ys: Array<string>): Array<string> {
 	// shortcuts for special cases
-	if (xs.length == 0)
+	if (xs.length === 0)
 		return ys;
-	if (ys.length == 0)
+	if (ys.length === 0)
 		return xs;
 
 	let i: number = 0;
 	let j: number = 0;
 	let result: Array<string> = [];
 	while (i < xs.length || j < ys.length) {
-		if (j == ys.length || xs[i] < ys[j]) {
+		if (j === ys.length || xs[i] < ys[j]) {
 			result.push(xs[i]);
 			i++;
 		} else {
 			result.push(ys[j]);
-			if (i < xs.length && xs[i] == ys[j])
+			if (i < xs.length && xs[i] === ys[j])
 				i++;
 			j++;
 		}
