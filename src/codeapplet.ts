@@ -1145,11 +1145,11 @@ class Activation {
 				for (let i: number = 0; i < len; i++) {
 					ctx.fillStyle =
 						val[i] === lastval[i] ? "black" : "red";
-					ctx.fillText(val[i], x + (i+0.5)*codeParams.cellWidth, y+codeParams.baseLine);
+					ctx.fillText(String(val[i]), x + (i+0.5)*codeParams.cellWidth, y+codeParams.baseLine);
 				}
 			} else {
 				ctx.fillStyle = val === lastval ? "black" : "red";
-				ctx.fillText(val, x+codeParams.cellWidth/2, y+codeParams.baseLine);
+				ctx.fillText(String(val), x+codeParams.cellWidth/2, y+codeParams.baseLine);
 			}
 			y += 50;
 		}
@@ -1180,9 +1180,9 @@ class Activation {
 		ctx.fillStyle = "red";
 		if (val instanceof Array)
 			for (let i: number = 0; i < len; i++)
-				ctx.fillText(val[i], x + (i+0.5)*codeParams.cellWidth, y+codeParams.baseLine);
+				ctx.fillText(String(val[i]), x + (i+0.5)*codeParams.cellWidth, y+codeParams.baseLine);
 		else
-			ctx.fillText(val, x+codeParams.cellWidth/2, y+codeParams.baseLine);
+			ctx.fillText(String(val), x+codeParams.cellWidth/2, y+codeParams.baseLine);
 	}
 
 	private drawCells(ctx: CanvasRenderingContext2D, attr: string, x: number, y: number, n: number): void {
