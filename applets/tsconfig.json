@@ -10,7 +10,7 @@
         "noImplicitReturns": true,
         "noImplicitThis": true,
         "removeComments": true,
-        "outDir" : "built",
+        "outDir" : "javascript",
         "noEmitOnError": true
     },
     "files": [
