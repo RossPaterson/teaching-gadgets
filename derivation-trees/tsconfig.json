@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "lib": ["dom", "es2015"],
+        "strict": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "removeComments": true,
+        "outFile": "javascript/cfg_explorer.js",
+        "noEmitOnError": true
+    },
+    "files": [
+        "src/cfg_explorer.ts"
+    ]
+}

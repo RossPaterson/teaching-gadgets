@@ -1,0 +1,91 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script type="text/javascript" src="javascript/cfg_explorer.js"></script>
+<title>Explorer for context-free grammars</title>
+</head>
+<body>
+<h1>Explorer for context-free grammars</h1>
+
+<p>
+This is a tool for exploring the relationship between context-free grammars,
+derivation trees and languages.
+
+<h2>Grammar rules</h2>
+
+<table border="0" style="float: left; margin-right: 4em;">
+<tr>
+<td><input type="text" id="lhs1" size="1"></td>
+<td>&#x2192;</td>
+<td><input type="text" id="rhs1"></td>
+</tr>
+<tr>
+<td><input type="text" id="lhs2" size="1"></td>
+<td>&#x2192;</td>
+<td><input type="text" id="rhs2"></td>
+</tr>
+<tr>
+<td><input type="text" id="lhs3" size="1"></td>
+<td>&#x2192;</td>
+<td><input type="text" id="rhs3"></td>
+</tr>
+<tr>
+<td><input type="text" id="lhs4" size="1"></td>
+<td>&#x2192;</td>
+<td><input type="text" id="rhs4"></td>
+</tr>
+<tr>
+<td><input type="text" id="lhs5" size="1"></td>
+<td>&#x2192;</td>
+<td><input type="text" id="rhs5"></td>
+</tr>
+<tr>
+<td><input type="text" id="lhs6" size="1"></td>
+<td>&#x2192;</td>
+<td><input type="text" id="rhs6"></td>
+</tr>
+<tr>
+<td><input type="text" id="lhs7" size="1"></td>
+<td>&#x2192;</td>
+<td><input type="text" id="rhs7"></td>
+</tr>
+<tr>
+<td><input type="text" id="lhs8" size="1"></td>
+<td>&#x2192;</td>
+<td><input type="text" id="rhs8"></td>
+</tr>
+<tr>
+<td><input type="text" id="lhs9" size="1"></td>
+<td>&#x2192;</td>
+<td><input type="text" id="rhs9"></td>
+</tr>
+<tr>
+<td><input type="text" id="lhs10" size="1"></td>
+<td>&#x2192;</td>
+<td><input type="text" id="rhs10"></td>
+</tr>
+</table>
+
+<ul>
+<li>Symbols are single characters.
+<li>Spaces are ignored.
+<li>Alternatives may be separated with '|' or
+by given in multiple productions with the same left-hand-side.
+</ul>
+
+<p>
+Example:
+S &#x2192; aSb|c
+</p>
+
+<div id="problems" style="color: red;"></div>
+
+<p style="clear: both;">&nbsp;</p>
+<p><button onclick="allDerivations()">All possible derivations</button>
+<p><input type="text" id="sentence"/>
+<button onclick="deriveSentence()">Derivations of this string</button>
+
+<div id="gallery"></div>
+
+</body>
+</html>
