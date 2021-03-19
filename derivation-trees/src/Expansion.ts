@@ -1,6 +1,7 @@
 /// <reference path="Grammar.ts" />
 /// <reference path="List.ts" />
 /// <reference path="ParseTree.ts" />
+
 class Expansion {
 	private grammar: Grammar;
 	private limit: number;
@@ -29,15 +30,13 @@ class Expansion {
 		for (let nt of this.grammar.nonTerminals()) {
 			let ts: Array<NonTerminalTree> = [];
 			for (let rhs of this.grammar.expansions(nt)!) {
-				let strs: Array<List<ParseTree>> = []
-				strs.push(null);
+				let strs: Array<List<ParseTree>> = [null]
 				for (let i: number = rhs.length - 1; i >= 0; i--) {
 					let sym: string = rhs[i];
 					let exps: Array<NonTerminalTree> | undefined = this.lgges.get(sym);
 					if (exps === undefined) { // terminal
 						let t: ParseTree = new TerminalTree(sym);
-						for (let j: number = 0; j < strs.length; j++)
-							strs[j] = new Cons<ParseTree>(t, strs[j]);
+						strs = strs.map(cons(t));
 					} else {
 						let new_strs: Array<List<ParseTree>> = [];
 						for (let t of exps)
@@ -74,9 +73,7 @@ class Expansion {
 		return this.lgges.get(nt)!;
 	}
 
-	depth(): number {
-		return this.expandCount;
-	}
+	depth(): number { return this.expandCount; }
 
 	size(): number {
 		let n: number = 0;

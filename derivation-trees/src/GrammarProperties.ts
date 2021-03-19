@@ -23,29 +23,20 @@ class GrammarProperties {
 	}
 
 	// Nonterminals that cannot be reached from the start symbol
-	getUnreachable(): Set<string> {
-		return this.unreachable;
-	}
+	getUnreachable(): Set<string> { return this.unreachable; }
 
 	// Nonterminals that do not generate any strings
-	getUnrealizable(): Set<string> {
-		return this.unrealizable;
-	}
+	getUnrealizable(): Set<string> { return this.unrealizable; }
 
 	// Nonterminals that can generate the null string
-	getNullable(): Set<string> {
-		return this.nullable;
-	}
+	getNullable(): Set<string> { return this.nullable; }
 
 	// Nonterminals that can derive themselves
-	getCyclic(): Set<string> {
-		return this.cyclic;
-	}
+	getCyclic(): Set<string> { return this.cyclic; }
 
-	/** Some strings have infinitely many derivations.
-	  This occurs if and only if a cyclic nonterminal is both reachable
-	  and realizable.
-	 */
+	// Some strings have infinitely many derivations.
+	// This occurs if and only if a cyclic nonterminal is both
+	// reachable and realizable.
 	infinitelyAmbiguous(): boolean {
 		for (let nt of this.cyclic)
 			if (! this.unreachable.has(nt) &&
@@ -73,54 +64,44 @@ class GrammarProperties {
 
 	private computeUnrealizable(): Set<string> {
 		let unrealizable = new Set<string>(this.grammar.nonTerminals());
+		let isRealizable = function (sym: string) {
+			return ! unrealizable.has(sym);
+		};
+		let allRealizable = function (rhs: Array<string>) {
+			 return rhs.every(isRealizable);
+		}
+
 		let changed: boolean = true;
 		while (changed) {
 			changed = false;
-			for (let nt of unrealizable) {
-				let realizable: boolean = false;
-				for (let rhs of this.grammar.expansions(nt)!) {
-					realizable = true;
-					for (let sym of rhs)
-						if (unrealizable.has(sym)) {
-							realizable = false;
-							break;
-						}
-					if (realizable)
-						break;
-				}
-				if (realizable) {
+			for (let nt of unrealizable)
+				if (this.grammar.expansions(nt)!.some(allRealizable)) {
 					unrealizable.delete(nt);
 					changed = true;
 					break;
 				}
-			}
 		}
 		return unrealizable;
 	}
 
 	private computeNullable(): Set<string> {
 		let nullable = new Set<string>();
+		let isNullable = function (sym: string) {
+			return nullable.has(sym);
+		};
+		let allNullable = function (rhs: Array<string>) {
+			 return rhs.every(isNullable);
+		}
+
 		let changed: boolean = true;
 		while (changed) {
 			changed = false;
 			for (let nt of this.grammar.nonTerminals())
-				if (! nullable.has(nt)) {
-					let empty: boolean = false;
-					for (let rhs of this.grammar.expansions(nt)!) {
-						empty = true;
-						for (let sym of rhs)
-							if (! nullable.has(sym)) {
-								empty = false;
-								break;
-							}
-						if (empty)
-							break;
-					}
-					if (empty) {
-						nullable.add(nt);
-						changed = true;
-						break;
-					}
+				if (! nullable.has(nt) &&
+				    this.grammar.expansions(nt)!.some(allNullable)) {
+					nullable.add(nt);
+					changed = true;
+					break;
 				}
 		}
 		return nullable;

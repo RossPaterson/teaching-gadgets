@@ -8,7 +8,7 @@ function equalArray<T>(a: Array<T>, b: Array<T>) {
 		return true;
 	if (a.length != b.length)
 		return false;
-	for (let i: number = 0; i < a.length; i++)
+	for (let i in a)
 		if (a[i] !== b[i])
 			return false;
 	return true;
@@ -127,8 +127,8 @@ class Earley {
 			let queue = new Queue<EarleyItem>();
 			if (pos === input.length) {
 				// initial state (starting from end of string)
-				let rhs0: Array<string> = [];
-				rhs0.push(this.grammar.getStart());
+				let rhs0: Array<string> =
+					[this.grammar.getStart()];
 				queue.add(endItem(START, rhs0, pos));
 			} else {
 				// scan a terminal symbol

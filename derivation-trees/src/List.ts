@@ -1,14 +1,18 @@
-// Simple immutable lists
+// Simple lists
 type List<T> = Cons<T> | null;
 
 class Cons<T> {
 	public head: T;
 	public tail: List<T>;
 
-	constructor(head: T, tail: List<T>) {
-		this.head = head;
-		this.tail = tail;
+	constructor(x: T, xs: List<T>) {
+		this.head = x;
+		this.tail = xs;
 	}
+}
+
+function cons<T>(x: T) {
+	return function (xs: List<T>) { return new Cons<T>(x, xs); };
 }
 
 function arrayOf<T>(list: List<T>): Array<T> {

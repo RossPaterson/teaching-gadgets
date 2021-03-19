@@ -1,15 +1,19 @@
 // Scalable Vector Graphics
 
+// attribute of an SVG element
 type Attribute = { name: string, value: string };
 
+// a string-valued attribute
 function attr(n: string, v: string): Attribute {
 	return { name: n, value: v };
 }
 
+// a numeric attribute
 function numAttr(n: string, v: number): Attribute {
 	return { name: n, value: String(v) };
 }
 
+// general SVG element
 function svgElement(name: string, attrs: Array<Attribute>, children: Array<SVGElement>): SVGElement {
 	const e: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", name);
 	for (let attr of attrs)
@@ -19,6 +23,9 @@ function svgElement(name: string, attrs: Array<Attribute>, children: Array<SVGEl
 	return e;
 }
 
+// special cases
+
+// a collection of lines with the specified colour
 function lines(colour: string, children: Array<SVGElement>): SVGElement {
 	return svgElement("g", [
 		attr("stroke", colour),
@@ -26,6 +33,7 @@ function lines(colour: string, children: Array<SVGElement>): SVGElement {
 		attr("stroke-linecap", "round")], children);
 }
 
+// an SVG line element
 function line(x1: number, y1: number, x2: number, y2: number): SVGElement {
 	return svgElement("line", [
 		numAttr("x1", x1),
@@ -34,6 +42,7 @@ function line(x1: number, y1: number, x2: number, y2: number): SVGElement {
 		numAttr("y2", y2)], []);
 }
 
+// an SVG text element
 function text(x: number, y: number, colour: string, s: string): SVGElement {
 	const element = svgElement("text", [
 		numAttr("x", x),

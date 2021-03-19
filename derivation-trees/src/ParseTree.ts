@@ -65,7 +65,7 @@ class NonTerminalTree extends ParseTree {
 			return false;
 		if (! (o.sym === this.sym && o.children.length == this.children.length))
 			return false;
-		for (let i: number = 0; i < this.children.length; i++)
+		for (let i in this.children)
 			if (! this.children[i].equals(o.children[i]))
 				return false;
 		return true;

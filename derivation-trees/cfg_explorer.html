@@ -2,6 +2,20 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <script type="text/javascript" src="javascript/cfg_explorer.js"></script>
+<style>
+body {
+	font-family: sans-serif;
+	margin-left: 20px;
+}
+table.grammar {
+	float: left; margin-right: 4em; margin-bottom: 4ex;
+	background-color: #ffe4b5;
+	border: #a0522d solid 2px;
+	padding: 10pt;
+}
+#controls { clear: both; }
+#problems { color: red;}
+</style>
 <title>Explorer for context-free grammars</title>
 </head>
 <body>
@@ -13,55 +27,45 @@ derivation trees and languages.
 
 <h2>Grammar rules</h2>
 
-<table border="0" style="float: left; margin-right: 4em;">
+<table class="grammar">
 <tr>
-<td><input type="text" id="lhs1" size="1"></td>
-<td>&#x2192;</td>
+<td><input type="text" id="lhs1" size="1"></td><td>&#x2192;</td>
 <td><input type="text" id="rhs1"></td>
 </tr>
 <tr>
-<td><input type="text" id="lhs2" size="1"></td>
-<td>&#x2192;</td>
+<td><input type="text" id="lhs2" size="1"></td><td>&#x2192;</td>
 <td><input type="text" id="rhs2"></td>
 </tr>
 <tr>
-<td><input type="text" id="lhs3" size="1"></td>
-<td>&#x2192;</td>
+<td><input type="text" id="lhs3" size="1"></td><td>&#x2192;</td>
 <td><input type="text" id="rhs3"></td>
 </tr>
 <tr>
-<td><input type="text" id="lhs4" size="1"></td>
-<td>&#x2192;</td>
+<td><input type="text" id="lhs4" size="1"></td><td>&#x2192;</td>
 <td><input type="text" id="rhs4"></td>
 </tr>
 <tr>
-<td><input type="text" id="lhs5" size="1"></td>
-<td>&#x2192;</td>
+<td><input type="text" id="lhs5" size="1"></td><td>&#x2192;</td>
 <td><input type="text" id="rhs5"></td>
 </tr>
 <tr>
-<td><input type="text" id="lhs6" size="1"></td>
-<td>&#x2192;</td>
+<td><input type="text" id="lhs6" size="1"></td><td>&#x2192;</td>
 <td><input type="text" id="rhs6"></td>
 </tr>
 <tr>
-<td><input type="text" id="lhs7" size="1"></td>
-<td>&#x2192;</td>
+<td><input type="text" id="lhs7" size="1"></td><td>&#x2192;</td>
 <td><input type="text" id="rhs7"></td>
 </tr>
 <tr>
-<td><input type="text" id="lhs8" size="1"></td>
-<td>&#x2192;</td>
+<td><input type="text" id="lhs8" size="1"></td><td>&#x2192;</td>
 <td><input type="text" id="rhs8"></td>
 </tr>
 <tr>
-<td><input type="text" id="lhs9" size="1"></td>
-<td>&#x2192;</td>
+<td><input type="text" id="lhs9" size="1"></td><td>&#x2192;</td>
 <td><input type="text" id="rhs9"></td>
 </tr>
 <tr>
-<td><input type="text" id="lhs10" size="1"></td>
-<td>&#x2192;</td>
+<td><input type="text" id="lhs10" size="1"></td><td>&#x2192;</td>
 <td><input type="text" id="rhs10"></td>
 </tr>
 </table>
@@ -70,20 +74,21 @@ derivation trees and languages.
 <li>Symbols are single characters.
 <li>Spaces are ignored.
 <li>Alternatives may be separated with '|' or
-by given in multiple productions with the same left-hand-side.
+given in multiple productions with the same left-hand-side.
 </ul>
 
 <p>
-Example:
+<em>Example:</em>
 S &#x2192; aSb|c
 </p>
 
-<div id="problems" style="color: red;"></div>
+<div id="problems"></div>
 
-<p style="clear: both;">&nbsp;</p>
+<div id="controls">
 <p><button onclick="allDerivations()">All possible derivations</button>
 <p><input type="text" id="sentence"/>
 <button onclick="deriveSentence()">Derivations of this string</button>
+</div>
 
 <div id="gallery"></div>
 
