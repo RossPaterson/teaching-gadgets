@@ -20,11 +20,11 @@ abstract class ParseTree {
 
 	abstract height(): number;
 	abstract width(): number;
-	abstract shortName(): string;
 
 	abstract addSentence(s: string): string;
 	abstract draw(out: Array<SVGElement>, x: number, y: number, levels: number): number;
 
+	// deep equality test
 	abstract equals(o: ParseTree): boolean;
 }
 
@@ -56,7 +56,6 @@ class NonTerminalTree extends ParseTree {
 
 	height(): number { return this.ht; }
 	width(): number { return this.wd; }
-	shortName(): string { return this.sym; }
 	nonTerminal(): string { return this.sym; }
 
 	equals(o: ParseTree): boolean {
@@ -120,7 +119,6 @@ class TerminalTree extends ParseTree {
 
 	height(): number { return 1; }
 	width(): number { return 1; }
-	shortName(): string { return this.sym; }
 
 	equals(o: ParseTree): boolean {
 		if (o === this)
@@ -150,6 +148,7 @@ class TerminalTree extends ParseTree {
 	}
 }
 
+// deep equality test for lists
 function equalList(xs: List<ParseTree>, ys: List<ParseTree>): boolean {
 	while (xs !== null) {
 		if (ys === null)
@@ -164,7 +163,8 @@ function equalList(xs: List<ParseTree>, ys: List<ParseTree>): boolean {
 	return ys === null;
 }
 
-// compare trees first by length, then by generated sentence
+// compare trees first by length of generated sentence, then generated
+// text, then tree height
 function compareNTs(a: NonTerminalTree, b: NonTerminalTree): number {
 	const a_sentence: string = a.getSentence();
 	const b_sentence: string = b.getSentence();
