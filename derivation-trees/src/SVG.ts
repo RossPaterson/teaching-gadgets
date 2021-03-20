@@ -16,9 +16,9 @@ function numAttr(n: string, v: number): Attribute {
 // general SVG element
 function svgElement(name: string, attrs: Array<Attribute>, children: Array<SVGElement>): SVGElement {
 	const e: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", name);
-	for (let attr of attrs)
+	for (const attr of attrs)
 		e.setAttribute(attr.name, attr.value);
-	for (let child of children)
+	for (const child of children)
 		e.appendChild(child);
 	return e;
 }

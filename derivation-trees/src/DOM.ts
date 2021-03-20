@@ -14,10 +14,10 @@ function removeChildren(element: HTMLElement): void {
 
 // form an HTML unordered list from a list of strings
 function bulletList(items: Array<string>): HTMLElement {
-	let children: Array<HTMLElement> = [];
-	for (let item of items)
-		children.push(simpleElement("li", item));
-	return compoundElement("ul", children);
+	const listItem = function (item: string) {
+		return simpleElement("li", item);
+	}
+	return compoundElement("ul", items.map(listItem));
 }
 
 // create an HTML element with string content
@@ -30,7 +30,7 @@ function simpleElement(name: string, content: string): HTMLElement {
 // create an HTML element with a list of elements as content
 function compoundElement(name: string, children: Array<HTMLElement>): HTMLElement {
 	const element: HTMLElement = document.createElement(name);
-	for (let child of children)
+	for (const child of children)
 		element.appendChild(child);
 	return element;
 }

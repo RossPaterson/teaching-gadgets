@@ -9,7 +9,7 @@
 function symList(s: string): Array<string> {
 	let cs = [];
 	for (let i = 0; i < s.length; i++) {
-		let c: string = s.charAt(i);
+		const c: string = s.charAt(i);
 		if (c !== ' ')
 			cs.push(c);
 	}
@@ -17,11 +17,7 @@ function symList(s: string): Array<string> {
 }
 
 function parseRHS(rhs: string): Array<Array<string>> {
-	const strs: Array<string> = rhs.split("|");
-	let rs: Array<Array<string>> = [];
-	for (let s of strs)
-		rs.push(symList(s));
-	return rs;
+	return rhs.split("|").map(symList);
 }
 
 function getGrammar(): Grammar {
@@ -31,7 +27,7 @@ function getGrammar(): Grammar {
 		const rhs: string = getParameter("rhs" + i);
 		if (lhs !== "") {
 			const prods: Array<Array<string>> = parseRHS(rhs);
-			for (let i in prods)
+			for (const i in prods)
 				grammar.addProduction(lhs, prods[i]);
 		}
 	}
@@ -46,9 +42,9 @@ function allDerivations(): void {
 	checkGrammar(grammar);
 
 	const maxDepth: number = grammar.nonTerminals().length + 9;
-	let lgges: Expansion = new Expansion(grammar, LIMIT);
+	const lgges: Expansion = new Expansion(grammar, LIMIT);
 	lgges.expandToDepth(maxDepth);
-	let trees: Array<NonTerminalTree> =
+	const trees: Array<NonTerminalTree> =
 		lgges.derivations(grammar.getStart());
 
 	const caption: string = lgges.complete() ? "All derivation trees" :
@@ -62,8 +58,8 @@ function deriveSentence(): void {
 
 	checkGrammar(grammar);
 
-	let parser: Earley = new Earley(grammar);
-	let result: ParseResult = parser.parse(symList(sentence));
+	const parser: Earley = new Earley(grammar);
+	const result: ParseResult = parser.parse(symList(sentence));
 
 	const caption: string = (! result.complete ? "Some of the derivations" :
 		result.trees.length == 0 ? "There are no derivations" :
@@ -73,11 +69,11 @@ function deriveSentence(): void {
 }
 
 function checkGrammar(g: Grammar): void {
-	let properties: GrammarProperties = new GrammarProperties(g);
+	const properties: GrammarProperties = new GrammarProperties(g);
 	let issues: Array<string> = [];
-        let unreachable: Set<string> = properties.getUnreachable();
-        let unrealizable: Set<string> = properties.getUnrealizable();
-        let cyclic: Set<string> = properties.getCyclic();
+        const unreachable: Set<string> = properties.getUnreachable();
+        const unrealizable: Set<string> = properties.getUnrealizable();
+        const cyclic: Set<string> = properties.getCyclic();
 	if (unreachable.size > 0)
 		issues.push(subjectNTs(unreachable) +
 			"unreachable from the start symbol " + g.getStart() + ".");
@@ -102,7 +98,7 @@ function checkGrammar(g: Grammar): void {
 function subjectNTs(nts: Set<string>): string {
 	let str: string = nts.size > 1 ? "Nonterminals " : "Nonterminal ";
 	let first: boolean = true;
-	for (let nt of nts.values())
+	for (const nt of nts.values())
 		if (first) {
 			str = str + nt;
 			first = false;
@@ -118,7 +114,7 @@ function treeGallery(caption: string, trees: Array<NonTerminalTree>): void {
 		removeChildren(gallery);
 		gallery.appendChild(simpleElement("h2", caption));
 		trees.sort(compareNTs);
-		for (let tree of trees)
+		for (const tree of trees)
 			gallery.appendChild(drawTree(tree));
 	}
 }

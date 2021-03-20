@@ -8,7 +8,7 @@ function equalArray<T>(a: Array<T>, b: Array<T>) {
 		return true;
 	if (a.length != b.length)
 		return false;
-	for (let i in a)
+	for (const i in a)
 		if (a[i] !== b[i])
 			return false;
 	return true;
@@ -81,7 +81,7 @@ class EarleyItem {
 	complete(): NonTerminalTree {
 		if (! this.finished())
 			throw "not complete";
-		return new NonTerminalTree(this.nt, arrayOf(this.parsed));
+		return new NonTerminalTree(this.nt, Array.from(elements(this.parsed)));
 	}
 
 	start(): number { return this.finish; }
@@ -127,21 +127,21 @@ class Earley {
 			let queue = new Queue<EarleyItem>();
 			if (pos === input.length) {
 				// initial state (starting from end of string)
-				let rhs0: Array<string> =
+				const rhs0: Array<string> =
 					[this.grammar.getStart()];
 				queue.add(endItem(START, rhs0, pos));
 			} else {
 				// scan a terminal symbol
-				let nextSym: string = input[pos];
-				if (this.grammar.expansions(nextSym) === undefined) { // terminal
-					let t: TerminalTree = new TerminalTree(nextSym);
-					for (let item of states[pos+1])
+				const nextSym: string = input[pos];
+				if (this.grammar.isTerminal(nextSym)) {
+					const t: TerminalTree = new TerminalTree(nextSym);
+					for (const item of states[pos+1])
 						if (item.match(nextSym))
 							queue.add(item.advance(t));
 				}
 			}
 
-			let state: Array<EarleyItem> = states[pos];
+			const state: Array<EarleyItem> = states[pos];
 			let empties: Array<NonTerminalTree> = [];
 			// guard against unlimited expansion
 			while (! queue.isEmpty()) {
@@ -149,9 +149,9 @@ class Earley {
 					truncated = true;
 					break;
 				}
-				let item: EarleyItem = queue.remove();
+				const item: EarleyItem = queue.remove();
 				let seen: boolean = false;
-				for (let s of state)
+				for (const s of state)
 					if (s.equals(item)) {
 						seen = true;
 						break;
@@ -161,24 +161,23 @@ class Earley {
 					// expand the item
 					if (item.finished()) {
 						// complete a production
-						let t: NonTerminalTree = item.complete();
-						let nt: string = t.nonTerminal();
+						const t: NonTerminalTree = item.complete();
+						const nt: string = t.nonTerminal();
 						const end: number = item.start();
 						if (end === pos)
 							// null expansions need special treatment
 							empties.push(t);
-						for (let prev of states[end])
+						for (const prev of states[end])
 							if (prev.match(nt))
 								queue.add(prev.advance(t));
 					} else {
 						// predict: expand a nonterminal
-						let nt: string = item.current();
-						let rhss: Array<Array<string>> | undefined =
-							this.grammar.expansions(nt);
-						if (rhss !== undefined) {
-							for (let rhs of rhss)
+						const nt: string = item.current();
+						if (this.grammar.isNonTerminal(nt)) {
+							const rhss: Array<Array<string>> = this.grammar.expansions(nt);
+							for (const rhs of rhss)
 								queue.add(endItem(nt, rhs, pos));
-							for (let t of empties)
+							for (const t of empties)
 								if (t.nonTerminal() === nt)
 									queue.add(item.advance(t));
 						}
@@ -189,7 +188,7 @@ class Earley {
 		}
 
 		let trees: Array<NonTerminalTree> = [];
-		for (let item of states[0])
+		for (const item of states[0])
 			if (item.finishedWith(START))
 				trees.push(item.completeTop());
 		return { complete: ! truncated, trees: trees };

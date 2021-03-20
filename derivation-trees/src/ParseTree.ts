@@ -43,7 +43,7 @@ class NonTerminalTree extends ParseTree {
 
 		let h: number = 1;
 		let w: number = 0;
-		for (let t of children) {
+		for (const t of children) {
 			h = Math.max(h, t.height());
 			w = w + t.width();
 		}
@@ -65,7 +65,7 @@ class NonTerminalTree extends ParseTree {
 			return false;
 		if (! (o.sym === this.sym && o.children.length == this.children.length))
 			return false;
-		for (let i in this.children)
+		for (const i in this.children)
 			if (! this.children[i].equals(o.children[i]))
 				return false;
 		return true;
@@ -74,7 +74,7 @@ class NonTerminalTree extends ParseTree {
 	getSentence(): string { return this.sentence; }
 
 	addSentence(s: string): string {
-		for (let t of this.children)
+		for (const t of this.children)
 			s = t.addSentence(s);
 		return s;
 	}
@@ -85,7 +85,7 @@ class NonTerminalTree extends ParseTree {
 		let trx: Array<number> = [];
 		let n: number = 0;
 		let tx: number = x;
-		for (let t of this.children) {
+		for (const t of this.children) {
 			trx.push(t.draw(out, tx, ty, levels-1));
 			n++;
 			tx = tx + t.width()*HSEP;
@@ -105,7 +105,7 @@ class NonTerminalTree extends ParseTree {
 			let ls: Array<SVGElement> = [];
 			tx = x;
 			let i: number = 0;
-			for (let t of this.children) {
+			for (const t of this.children) {
 				ls.push(line(rx, y+BOTTOM, trx[i], ty-TOP));
 				i++;
 				tx = tx + t.width()*HSEP;

@@ -21,7 +21,13 @@ class Grammar {
 
 	nonTerminals(): Array<string> { return this.lhss; }
 
-	expansions(nt: string): Array<Array<string>> | undefined {
-		return this.productions.get(nt);
+	isTerminal(sym: string) { return ! this.productions.has(sym); }
+
+	isNonTerminal(sym: string) { return this.productions.has(sym); }
+
+	// expansions of a non-terminal
+	// requires: isNonTerminal(nt)
+	expansions(nt: string): Array<Array<string>> {
+		return this.productions.get(nt)!;
 	}
 }

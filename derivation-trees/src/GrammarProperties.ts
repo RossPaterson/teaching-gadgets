@@ -1,8 +1,8 @@
 /// <reference path="Grammar.ts" />
 /// <reference path="Queue.ts" />
 
-function addAll<A>(s: Set<A>, vs: Set<A>): void {
-	for (let v of vs)
+function addAll<A>(s: Set<A>, vs: Iterable<A>): void {
+	for (const v of vs)
 		s.add(v);
 }
 
@@ -38,7 +38,7 @@ class GrammarProperties {
 	// This occurs if and only if a cyclic nonterminal is both
 	// reachable and realizable.
 	infinitelyAmbiguous(): boolean {
-		for (let nt of this.cyclic)
+		for (const nt of this.cyclic)
 			if (! this.unreachable.has(nt) &&
 			    ! this.unrealizable.has(nt))
 				return true;
@@ -50,12 +50,12 @@ class GrammarProperties {
 		let queue = new Queue<string>();
 		queue.add(this.grammar.getStart());
 		while (! queue.isEmpty()) {
-			let nt: string = queue.remove();
+			const nt: string = queue.remove();
 			if (! reachable.has(nt)) {
 				reachable.add(nt);
-				for (let rhs of this.grammar.expansions(nt)!)
-					for (let sym of rhs)
-						if (this.grammar.expansions(sym) !== undefined)
+				for (const rhs of this.grammar.expansions(nt))
+					for (const sym of rhs)
+						if (this.grammar.isNonTerminal(sym))
 							queue.add(sym);
 			}
 		}
@@ -64,18 +64,18 @@ class GrammarProperties {
 
 	private computeUnrealizable(): Set<string> {
 		let unrealizable = new Set<string>(this.grammar.nonTerminals());
-		let isRealizable = function (sym: string) {
+		const isRealizable = function (sym: string) {
 			return ! unrealizable.has(sym);
 		};
-		let allRealizable = function (rhs: Array<string>) {
+		const allRealizable = function (rhs: Array<string>) {
 			 return rhs.every(isRealizable);
-		}
+		};
 
 		let changed: boolean = true;
 		while (changed) {
 			changed = false;
-			for (let nt of unrealizable)
-				if (this.grammar.expansions(nt)!.some(allRealizable)) {
+			for (const nt of unrealizable)
+				if (this.grammar.expansions(nt).some(allRealizable)) {
 					unrealizable.delete(nt);
 					changed = true;
 					break;
@@ -86,19 +86,19 @@ class GrammarProperties {
 
 	private computeNullable(): Set<string> {
 		let nullable = new Set<string>();
-		let isNullable = function (sym: string) {
+		const isNullable = function (sym: string) {
 			return nullable.has(sym);
 		};
-		let allNullable = function (rhs: Array<string>) {
+		const allNullable = function (rhs: Array<string>) {
 			 return rhs.every(isNullable);
-		}
+		};
 
 		let changed: boolean = true;
 		while (changed) {
 			changed = false;
-			for (let nt of this.grammar.nonTerminals())
+			for (const nt of this.grammar.nonTerminals())
 				if (! nullable.has(nt) &&
-				    this.grammar.expansions(nt)!.some(allNullable)) {
+				    this.grammar.expansions(nt).some(allNullable)) {
 					nullable.add(nt);
 					changed = true;
 					break;
@@ -109,19 +109,18 @@ class GrammarProperties {
 
 	private computeCyclic(): Set<string> {
 		let trivialExpansion = new Map<string, Set<string>>();
-		for (let nt of this.grammar.nonTerminals()) {
+		for (const nt of this.grammar.nonTerminals()) {
 			let s = new Set<string>();
-			for (let rhs of this.grammar.expansions(nt)!) {
+			for (const rhs of this.grammar.expansions(nt)) {
 				let nonNullCount: number = 0;
 				for (let sym of  rhs)
 					if (! this.nullable.has(sym))
 						nonNullCount++;
 				if (nonNullCount === 0)
-					for (let sym of rhs)
-						s.add(sym);
+					addAll(s, rhs);
 				else if (nonNullCount === 1)
-					for (let sym of rhs)
-						if (this.grammar.expansions(sym) !== undefined &&
+					for (const sym of rhs)
+						if (this.grammar.isNonTerminal(sym) &&
 						    ! this.nullable.has(sym))
 							s.add(sym);
 			}
@@ -133,13 +132,11 @@ class GrammarProperties {
 		let changed: boolean = true;
 		while (changed) {
 			changed = false;
-			for (let nt of trivialExpansion.keys()) {
+			for (const nt of trivialExpansion.keys()) {
 				let exp: Set<string> = trivialExpansion.get(nt)!;
-				let expClone = new Array<string>();
-				for (let sym of exp)
-					expClone.push(sym);
-				for (let target of expClone) {
-					let extra = trivialExpansion.get(target);
+				const expClone: Array<string> = Array.from(exp);
+				for (const target of expClone) {
+					const extra = trivialExpansion.get(target);
 					if (extra)
 						addAll(exp, extra);
 				}
@@ -149,7 +146,7 @@ class GrammarProperties {
 		}
 
 		let cyclic = new Set<string>();
-		for (let [nt, exp] of trivialExpansion.entries())
+		for (const [nt, exp] of trivialExpansion.entries())
 			if (exp.has(nt))
 				cyclic.add(nt);
 		return cyclic;
@@ -157,7 +154,7 @@ class GrammarProperties {
 
 	private complement(s: Set<string>): Set<string> {
 		let rest = new Set<string>();
-		for (let nt of this.grammar.nonTerminals())
+		for (const nt of this.grammar.nonTerminals())
 			if (! s.has(nt))
 				rest.add(nt);
 		return rest;

@@ -15,11 +15,21 @@ function cons<T>(x: T) {
 	return function (xs: List<T>) { return new Cons<T>(x, xs); };
 }
 
-function arrayOf<T>(list: List<T>): Array<T> {
-	let a: Array<T> = [];
+function* listIterator<T>(list: List<T>): Iterator<T> {
 	while (list !== null) {
-		a.push(list.head);
+		yield list.head;
 		list = list.tail;
 	}
-	return a;
+}
+
+class ListElements<T> implements Iterable<T> {
+	private list: List<T>;
+
+	constructor(list: List<T>) { this.list = list; }
+
+	[Symbol.iterator](): Iterator<T> { return listIterator(this.list); }
+}
+
+function elements<T>(list: List<T>): Iterable<T> {
+	return new ListElements<T>(list);
 }
