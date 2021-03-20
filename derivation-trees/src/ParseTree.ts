@@ -1,3 +1,4 @@
+/// <reference path="List.ts" />
 /// <reference path="SVG.ts" />
 
 const HSEP: number = 30;
@@ -29,21 +30,21 @@ abstract class ParseTree {
 
 class NonTerminalTree extends ParseTree {
 	private sym: string;
-	private children: Array<ParseTree>;
+	private children: List<ParseTree>;
 
 	// derived values
 	private ht: number;
 	private wd: number;
 	private sentence: string;
 
-	constructor(sym: string, children: Array<ParseTree>) {
+	constructor(sym: string, children: List<ParseTree>) {
 		super();
 		this.sym = sym;
 		this.children = children;
 
 		let h: number = 1;
 		let w: number = 0;
-		for (const t of children) {
+		for (const t of elements(children)) {
 			h = Math.max(h, t.height());
 			w = w + t.width();
 		}
@@ -63,18 +64,14 @@ class NonTerminalTree extends ParseTree {
 			return true;
 		if (! (o instanceof NonTerminalTree))
 			return false;
-		if (! (o.sym === this.sym && o.children.length == this.children.length))
-			return false;
-		for (const i in this.children)
-			if (! this.children[i].equals(o.children[i]))
-				return false;
-		return true;
+		return this.sym == o.sym &&
+			equalList(this.children, o.children);
 	}
 
 	getSentence(): string { return this.sentence; }
 
 	addSentence(s: string): string {
-		for (const t of this.children)
+		for (const t of elements(this.children))
 			s = t.addSentence(s);
 		return s;
 	}
@@ -85,7 +82,7 @@ class NonTerminalTree extends ParseTree {
 		let trx: Array<number> = [];
 		let n: number = 0;
 		let tx: number = x;
-		for (const t of this.children) {
+		for (const t of elements(this.children)) {
 			trx.push(t.draw(out, tx, ty, levels-1));
 			n++;
 			tx = tx + t.width()*HSEP;
@@ -105,7 +102,7 @@ class NonTerminalTree extends ParseTree {
 			let ls: Array<SVGElement> = [];
 			tx = x;
 			let i: number = 0;
-			for (const t of this.children) {
+			for (const t of elements(this.children)) {
 				ls.push(line(rx, y+BOTTOM, trx[i], ty-TOP));
 				i++;
 				tx = tx + t.width()*HSEP;
@@ -151,6 +148,20 @@ class TerminalTree extends ParseTree {
 			[line(x, y + BOTTOM, x, ly - TOP)]));
 		return x;
 	}
+}
+
+function equalList(xs: List<ParseTree>, ys: List<ParseTree>): boolean {
+	while (xs !== null) {
+		if (ys === null)
+			return false;
+		if (xs === ys)
+			return true;
+		if (! xs.head.equals(ys.head))
+			return false;
+		xs = xs.tail;
+		ys = ys.tail;
+	}
+	return ys === null;
 }
 
 // compare trees first by length, then by generated sentence

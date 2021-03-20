@@ -33,7 +33,7 @@ class Expansion {
 				const strs: Array<List<ParseTree>> =
 					this.expandSymbols(rhs);
 				for (const str of strs) {
-					const t: NonTerminalTree = new NonTerminalTree(nt, Array.from(elements(str)));
+					const t = new NonTerminalTree(nt, str);
 					ts.push(t);
 					this.count += t.height()*t.width();
 					if (this.count > this.limit)

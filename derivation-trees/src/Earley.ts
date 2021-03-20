@@ -14,20 +14,6 @@ function equalArray<T>(a: Array<T>, b: Array<T>) {
 	return true;
 }
 
-function equalList(xs: List<ParseTree>, ys: List<ParseTree>): boolean {
-	while (xs !== null) {
-		if (ys === null)
-			return false;
-		if (xs === ys)
-			return true;
-		if (! xs.head.equals(ys.head))
-			return false;
-		xs = xs.tail;
-		ys = ys.tail;
-	}
-	return ys === null;
-}
-
 // scanning right to left
 class EarleyItem {
 	private nt: string;
@@ -81,7 +67,7 @@ class EarleyItem {
 	complete(): NonTerminalTree {
 		if (! this.finished())
 			throw "not complete";
-		return new NonTerminalTree(this.nt, Array.from(elements(this.parsed)));
+		return new NonTerminalTree(this.nt, this.parsed);
 	}
 
 	start(): number { return this.finish; }
