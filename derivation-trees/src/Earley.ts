@@ -16,20 +16,11 @@ function equalArray<T>(a: Array<T>, b: Array<T>) {
 
 // scanning right to left
 class EarleyItem {
-	private nt: string;
-	private parsed: List<ParseTree>;
-	private rhs: Array<string>;
-	private pos: number; // position in rhs
-	private finish: number;
-
-	constructor(nt: string, parsed: List<ParseTree>, rhs: Array<string>,
-			pos: number, finish: number) {
-		this.nt = nt;
-		this.parsed = parsed;
-		this.rhs = rhs;
-		this.pos = pos;
-		this.finish = finish;
-	}
+	constructor(private readonly nt: string,
+		private readonly parsed: List<ParseTree>,
+		private readonly rhs: Array<string>, // position in rhs
+		private readonly pos: number,
+		private readonly finish: number) {}
 
 	// advance of item
 	advance(t: ParseTree): EarleyItem {
@@ -97,11 +88,7 @@ type ParseResult = {
 	};
 
 class Earley {
-	private grammar: Grammar;
-
-	constructor(grammar: Grammar) {
-		this.grammar = grammar;
-	}
+	constructor(private readonly grammar: Grammar) {}
 
 	parse(input: Array<string>): ParseResult {
 		let states: Array<Array<EarleyItem>> = [];
@@ -129,8 +116,8 @@ class Earley {
 
 			const state: Array<EarleyItem> = states[pos];
 			let empties: Array<NonTerminalTree> = [];
-			// guard against unlimited expansion
 			while (! queue.isEmpty()) {
+				// guard against unlimited expansion
 				if (state.length > EXPANSION_LIMIT) {
 					truncated = true;
 					break;

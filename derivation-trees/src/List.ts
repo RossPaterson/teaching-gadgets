@@ -2,13 +2,7 @@
 type List<T> = Cons<T> | null;
 
 class Cons<T> {
-	public head: T;
-	public tail: List<T>;
-
-	constructor(x: T, xs: List<T>) {
-		this.head = x;
-		this.tail = xs;
-	}
+	constructor(public readonly head: T, public tail: List<T>) {}
 }
 
 function cons<T>(x: T) {
@@ -23,9 +17,7 @@ function* listIterator<T>(list: List<T>): Iterator<T> {
 }
 
 class ListElements<T> implements Iterable<T> {
-	private list: List<T>;
-
-	constructor(list: List<T>) { this.list = list; }
+	constructor(private list: List<T>) {}
 
 	[Symbol.iterator](): Iterator<T> { return listIterator(this.list); }
 }

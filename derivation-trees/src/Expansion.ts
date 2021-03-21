@@ -3,19 +3,14 @@
 /// <reference path="ParseTree.ts" />
 
 class Expansion {
-	private grammar: Grammar;
-	private limit: number;
-
 	private lgges: Map<string, Array<NonTerminalTree>>;
 	private count: number;
 	private expandCount: number;
 	private finished: boolean;
 
 	// Empty language for each nonterminal
-	constructor(grammar: Grammar, limit: number) {
-		this.grammar = grammar;
-		this.limit = limit;
-
+	constructor(private readonly grammar: Grammar,
+			private readonly limit: number) {
 		this.count = 0;
 		this.expandCount = 0;
 		this.finished = false;

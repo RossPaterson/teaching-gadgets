@@ -29,18 +29,14 @@ abstract class ParseTree {
 }
 
 class NonTerminalTree extends ParseTree {
-	private sym: string;
-	private children: List<ParseTree>;
-
 	// derived values
 	private ht: number;
 	private wd: number;
 	private sentence: string;
 
-	constructor(sym: string, children: List<ParseTree>) {
+	constructor(private readonly sym: string,
+			private readonly children: List<ParseTree>) {
 		super();
-		this.sym = sym;
-		this.children = children;
 
 		let h: number = 1;
 		let w: number = 0;
@@ -113,9 +109,7 @@ class NonTerminalTree extends ParseTree {
 }
 
 class TerminalTree extends ParseTree {
-	private sym: string;
-
-	constructor(sym: string) { super(); this.sym = sym; }
+	constructor(private sym: string) { super(); }
 
 	height(): number { return 1; }
 	width(): number { return 1; }

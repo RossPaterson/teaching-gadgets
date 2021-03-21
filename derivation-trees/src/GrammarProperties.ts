@@ -1,20 +1,38 @@
 /// <reference path="Grammar.ts" />
 /// <reference path="Queue.ts" />
 
+// add all elements of vs to s
 function addAll<A>(s: Set<A>, vs: Iterable<A>): void {
 	for (const v of vs)
 		s.add(v);
 }
 
+// expand the relation to its transitive closure
+function transitiveClose<A>(rel: Map<A, Set<A>>): void {
+	let changed: boolean = true;
+	while (changed) {
+		changed = false;
+		for (const ys of rel.values()) {
+			const ysClone: Array<A> = Array.from(ys);
+			for (const target of ysClone) {
+				const extra = rel.get(target);
+				if (extra)
+					addAll(ys, extra);
+			}
+			if (ys.size > ysClone.length)
+				changed = true;
+		}
+	}
+}
+
 // Statically computable properties of a grammar
 class GrammarProperties {
-	private grammar: Grammar;
 	private unreachable: Set<string>;
 	private unrealizable: Set<string>;
 	private nullable: Set<string>;
 	private cyclic: Set<string>;
 
-	constructor(grammar: Grammar) {
+	constructor(private readonly grammar: Grammar) {
 		this.grammar = grammar;
 		this.unreachable = this.computeUnreachable();
 		this.unrealizable = this.computeUnrealizable();
@@ -46,6 +64,8 @@ class GrammarProperties {
 	}
 
 	private computeUnreachable(): Set<string> {
+		// Compute reachable nonterminals, building up from the
+		// start symbol.
 		let reachable = new Set<string>();
 		let queue = new Queue<string>();
 		queue.add(this.grammar.getStart());
@@ -107,8 +127,25 @@ class GrammarProperties {
 		return nullable;
 	}
 
+	// identify cyclic nonterminals
+	// assumes that nullable has already been set
 	private computeCyclic(): Set<string> {
-		let trivialExpansion = new Map<string, Set<string>>();
+		let expansion: Map<string, Set<string>> =
+			this.directExpansion();
+
+		transitiveClose(expansion);
+
+		let cyclic = new Set<string>();
+		for (const [nt, exp] of expansion.entries())
+			if (exp.has(nt))
+				cyclic.add(nt);
+		return cyclic;
+	}
+
+	// For each nonterminal A, find nonterminals B that occur in
+	// productions of the form A -> uBv where u and v are nullable.
+	private directExpansion(): Map<string, Set<string>> {
+		let expansion = new Map<string, Set<string>>();
 		for (const nt of this.grammar.nonTerminals()) {
 			let s = new Set<string>();
 			for (const rhs of this.grammar.expansions(nt)) {
@@ -125,31 +162,9 @@ class GrammarProperties {
 							s.add(sym);
 			}
 			if (s.size !== 0)
-				trivialExpansion.set(nt, s);
+				expansion.set(nt, s);
 		}
-
-		// transitive closure
-		let changed: boolean = true;
-		while (changed) {
-			changed = false;
-			for (const nt of trivialExpansion.keys()) {
-				let exp: Set<string> = trivialExpansion.get(nt)!;
-				const expClone: Array<string> = Array.from(exp);
-				for (const target of expClone) {
-					const extra = trivialExpansion.get(target);
-					if (extra)
-						addAll(exp, extra);
-				}
-				if (exp.size > expClone.length)
-					changed = true;
-			}
-		}
-
-		let cyclic = new Set<string>();
-		for (const [nt, exp] of trivialExpansion.entries())
-			if (exp.has(nt))
-				cyclic.add(nt);
-		return cyclic;
+		return expansion;
 	}
 
 	private complement(s: Set<string>): Set<string> {
