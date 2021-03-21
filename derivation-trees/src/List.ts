@@ -9,6 +9,22 @@ function cons<T>(x: T) {
 	return function (xs: List<T>) { return new Cons<T>(x, xs); };
 }
 
+// elementwise equality test for lists
+function equalList<A>(eq: (x: A, y: A) => boolean,
+		xs: List<A>, ys: List<A>): boolean {
+	while (xs !== null) {
+		if (ys === null)
+			return false;
+		if (xs === ys)
+			return true;
+		if (! eq(xs.head, ys.head))
+			return false;
+		xs = xs.tail;
+		ys = ys.tail;
+	}
+	return ys === null;
+}
+
 function* listIterator<T>(list: List<T>): Iterator<T> {
 	while (list !== null) {
 		yield list.head;

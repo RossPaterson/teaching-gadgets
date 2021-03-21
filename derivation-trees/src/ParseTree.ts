@@ -60,7 +60,7 @@ class NonTerminalTree extends ParseTree {
 		if (! (o instanceof NonTerminalTree))
 			return false;
 		return this.sym == o.sym &&
-			equalList(this.children, o.children);
+			equalList(equalParseTree, this.children, o.children);
 	}
 
 	getSentence(): string { return this.sentence; }
@@ -142,19 +142,8 @@ class TerminalTree extends ParseTree {
 	}
 }
 
-// deep equality test for lists
-function equalList(xs: List<ParseTree>, ys: List<ParseTree>): boolean {
-	while (xs !== null) {
-		if (ys === null)
-			return false;
-		if (xs === ys)
-			return true;
-		if (! xs.head.equals(ys.head))
-			return false;
-		xs = xs.tail;
-		ys = ys.tail;
-	}
-	return ys === null;
+function equalParseTree(x: ParseTree, y: ParseTree): boolean {
+	return x.equals(y);
 }
 
 // compare trees first by length of generated sentence, then generated
