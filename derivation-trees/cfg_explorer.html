@@ -86,12 +86,21 @@ S &#x2192; aSb|c
 
 <div id="controls">
 <p><button onclick="allDerivations()">All possible derivations</button>
-<p><input type="text" id="sentence" onkeydown="deriveOnReturn()"/>
+<p><input type="text" id="sentence"/>
 <button onclick="deriveSentence()">Derivations of this string</button>
 <script type="text/javascript">
-// execute the button action if return is typed
-document.getElementById('sentence').onkeydown =
-	function (e) { if (e.keyCode == 13) deriveSentence(); };
+// also execute button actions if return is typed in larger fields
+addReturnAction('rhs1', allDerivations);
+addReturnAction('rhs2', allDerivations);
+addReturnAction('rhs3', allDerivations);
+addReturnAction('rhs4', allDerivations);
+addReturnAction('rhs5', allDerivations);
+addReturnAction('rhs6', allDerivations);
+addReturnAction('rhs7', allDerivations);
+addReturnAction('rhs8', allDerivations);
+addReturnAction('rhs9', allDerivations);
+addReturnAction('rhs10', allDerivations);
+addReturnAction('sentence', deriveSentence);
 </script>
 </div>
 

@@ -118,3 +118,13 @@ function treeGallery(caption: string, trees: Array<NonTerminalTree>): void {
 			gallery.appendChild(drawTree(tree));
 	}
 }
+
+// execute the action if return is typed in the named field
+function addReturnAction(name: string, action: () => void): void {
+	const element: HTMLElement | null = document.getElementById(name);
+	if (element)
+		element.onkeydown = function (e) {
+			if (e.keyCode == 13)
+				action();
+		};
+}
