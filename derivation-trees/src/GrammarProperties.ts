@@ -25,6 +25,15 @@ function transitiveClose<A>(rel: Map<A, Set<A>>): void {
 	}
 }
 
+// elements related to themselves
+function identities<A>(rel: Map<A, Set<A>>): Set<A> {
+	let cyclic = new Set<A>();
+	for (const [x, ys] of rel.entries())
+		if (ys.has(x))
+			cyclic.add(x);
+	return cyclic;
+}
+
 // Statically computable properties of a grammar
 class GrammarProperties {
 	private unreachable: Set<string>;
@@ -33,7 +42,6 @@ class GrammarProperties {
 	private cyclic: Set<string>;
 
 	constructor(private readonly grammar: Grammar) {
-		this.grammar = grammar;
 		this.unreachable = this.computeUnreachable();
 		this.unrealizable = this.computeUnrealizable();
 		this.nullable = this.computeNullable();
@@ -132,14 +140,8 @@ class GrammarProperties {
 	private computeCyclic(): Set<string> {
 		let expansion: Map<string, Set<string>> =
 			this.directExpansion();
-
 		transitiveClose(expansion);
-
-		let cyclic = new Set<string>();
-		for (const [nt, exp] of expansion.entries())
-			if (exp.has(nt))
-				cyclic.add(nt);
-		return cyclic;
+		return identities(expansion);
 	}
 
 	// For each nonterminal A, find nonterminals B that occur in
