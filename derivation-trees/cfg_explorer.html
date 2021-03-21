@@ -11,7 +11,8 @@ table.grammar {
 	float: left; margin-right: 4em; margin-bottom: 4ex;
 	background-color: #ffe4b5;
 	border: #a0522d solid 2px;
-	padding: 10pt;
+	border-radius: 8px;
+	padding: 12pt;
 }
 #controls { clear: both; }
 #problems { color: red;}
@@ -88,6 +89,8 @@ S &#x2192; aSb|c
 <p><button onclick="allDerivations()">All possible derivations</button>
 <p><input type="text" id="sentence"/>
 <button onclick="deriveSentence()">Derivations of this string</button>
+</div>
+
 <script type="text/javascript">
 // also execute button actions if return is typed in larger fields
 addReturnAction('rhs1', allDerivations);
@@ -102,7 +105,6 @@ addReturnAction('rhs9', allDerivations);
 addReturnAction('rhs10', allDerivations);
 addReturnAction('sentence', deriveSentence);
 </script>
-</div>
 
 <div id="gallery"></div>
 
