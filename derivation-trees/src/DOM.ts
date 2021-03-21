@@ -1,7 +1,7 @@
 // get the value of the named input element
 function getParameter(name: string): string {
-	const element: HTMLInputElement = document.getElementById(name) as HTMLInputElement;
-	if (element)
+	const element: HTMLElement | null = document.getElementById(name);
+	if (element && element instanceof HTMLInputElement)
 		return element.value;
 	return "";
 }
