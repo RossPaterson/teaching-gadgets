@@ -3,10 +3,14 @@
 /// <reference path="ParseTree.ts" />
 
 class Expansion {
-	private lgges: Map<string, Array<NonTerminalTree>>;
+	// total size (width*height) of derivation trees
 	private count: number;
+	// number of times the languages have been expanded
 	private expandCount: number;
+	// true if last expansion reached a fixed point
 	private finished: boolean;
+	// derivation trees for each nonterminal
+	private lgges: Map<string, Array<NonTerminalTree>>;
 
 	// Empty language for each nonterminal
 	constructor(private readonly grammar: Grammar,
@@ -49,7 +53,7 @@ class Expansion {
 		let strs: Array<List<ParseTree>> = [null]
 		for (let i: number = syms.length - 1; i >= 0; i--)
 			strs = this.expandSymbol(syms[i], strs);
-		return strs
+		return strs;
 	}
 
 	private expandSymbol(sym: string, strs: Array<List<ParseTree>>): Array<List<ParseTree>> {
