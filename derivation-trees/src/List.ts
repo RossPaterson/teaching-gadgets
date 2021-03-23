@@ -9,15 +9,16 @@ function cons<T>(x: T) {
 	return function (xs: List<T>) { return new Cons<T>(x, xs); };
 }
 
+interface Equality<T> { equals(o: T): boolean; }
+
 // elementwise equality test for lists
-function equalList<A>(eq: (x: A, y: A) => boolean,
-		xs: List<A>, ys: List<A>): boolean {
+function equalList<T extends Equality<T>>(xs: List<T>, ys: List<T>): boolean {
 	while (xs !== null) {
 		if (ys === null)
 			return false;
 		if (xs === ys)
 			return true;
-		if (! eq(xs.head, ys.head))
+		if (xs.head.equals(ys.head))
 			return false;
 		xs = xs.tail;
 		ys = ys.tail;

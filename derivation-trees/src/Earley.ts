@@ -36,7 +36,7 @@ class EarleyItem {
 			return true;
 		return this.finish === o.finish && this.pos === o.pos &&
 			this.nt === o.nt && equalArray(this.rhs, o.rhs) &&
-			equalList(equalParseTree, this.parsed, o.parsed);
+			equalList(this.parsed, o.parsed);
 	}
 
 	finished(): boolean { return this.pos === 0; }

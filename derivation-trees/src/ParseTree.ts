@@ -15,7 +15,7 @@ const NT_LINE_COLOUR: string = "black";
 const NT_NULL_COLOUR: string = "#aaaaaa";
 const NT_NULL_SYMBOL: string = "ε";
 
-abstract class ParseTree {
+abstract class ParseTree implements Equality<ParseTree> {
 	constructor() {}
 
 	abstract height(): number;
@@ -60,7 +60,7 @@ class NonTerminalTree extends ParseTree {
 		if (! (o instanceof NonTerminalTree))
 			return false;
 		return this.sym == o.sym &&
-			equalList(equalParseTree, this.children, o.children);
+			equalList(this.children, o.children);
 	}
 
 	getSentence(): string { return this.sentence; }
@@ -140,10 +140,6 @@ class TerminalTree extends ParseTree {
 			[line(x, y + BOTTOM, x, ly - TOP)]));
 		return x;
 	}
-}
-
-function equalParseTree(x: ParseTree, y: ParseTree): boolean {
-	return x.equals(y);
 }
 
 // compare trees first by length of generated sentence, then generated
