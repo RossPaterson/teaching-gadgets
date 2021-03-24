@@ -30,9 +30,9 @@ abstract class ParseTree implements Equality<ParseTree> {
 
 class NonTerminalTree extends ParseTree {
 	// derived values
-	private ht: number;
-	private wd: number;
-	private sentence: string;
+	private readonly ht: number;
+	private readonly wd: number;
+	private readonly sentence: string;
 
 	constructor(private readonly sym: string,
 			private readonly children: List<ParseTree>) {
@@ -109,7 +109,7 @@ class NonTerminalTree extends ParseTree {
 }
 
 class TerminalTree extends ParseTree {
-	constructor(private sym: string) { super(); }
+	constructor(private readonly sym: string) { super(); }
 
 	height(): number { return 1; }
 	width(): number { return 1; }
