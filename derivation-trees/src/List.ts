@@ -2,7 +2,7 @@
 type List<T> = Cons<T> | null;
 
 class Cons<T> {
-	constructor(public readonly head: T, public tail: List<T>) {}
+	constructor(public readonly head: T, public readonly tail: List<T>) {}
 }
 
 function cons<T>(x: T) {
@@ -18,7 +18,7 @@ function equalList<T extends Equality<T>>(xs: List<T>, ys: List<T>): boolean {
 			return false;
 		if (xs === ys)
 			return true;
-		if (xs.head.equals(ys.head))
+		if (! xs.head.equals(ys.head))
 			return false;
 		xs = xs.tail;
 		ys = ys.tail;

@@ -1,9 +1,15 @@
-/// <reference path="List.ts" />
+// Simple queues
 
-// simple queues
+class QElement<T> {
+	public next: QElement<T> | null;
+
+	constructor(public readonly value: T) { this.next = null; }
+}
+
 class Queue<T> {
-	private front: List<T>;
-	private back: List<T>;
+	// invariant: if one of these is null, they both are
+	private front: QElement<T> | null;
+	private back: QElement<T> | null;
 
 	constructor() { this.front = this.back = null; }
 
@@ -13,20 +19,20 @@ class Queue<T> {
 	// add an element at the back of the queue
 	add(v: T): void {
 		if (this.back === null)
-			this.back = this.front = new Cons<T>(v, null);
+			this.back = this.front = new QElement<T>(v);
 		else
-			this.back = this.back.tail = new Cons<T>(v, null);
+			this.back = this.back.next = new QElement<T>(v);
 	}
 
 	// remove the front element from the queue
 	// requires: ! isEmpty()
 	remove(): T {
-		let head: List<T> = this.front;
-		if (head !== null) {
-			this.front = head.tail;
+		const front = this.front;
+		if (front !== null) {
+			this.front = front.next;
 			if (this.front === null)
 				this.back = null;
-			return head.head;
+			return front.value;
 		}
 		throw "empty queue";
 	}
