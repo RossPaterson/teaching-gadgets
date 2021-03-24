@@ -33,12 +33,8 @@ function* listIterator<T>(list: List<T>): Iterator<T> {
 	}
 }
 
-class ListElements<T> implements Iterable<T> {
-	constructor(private list: List<T>) {}
-
-	[Symbol.iterator](): Iterator<T> { return listIterator(this.list); }
-}
-
 function elements<T>(list: List<T>): Iterable<T> {
-	return new ListElements<T>(list);
+	return {
+		[Symbol.iterator](): Iterator<T> { return listIterator(list); }
+	};
 }
