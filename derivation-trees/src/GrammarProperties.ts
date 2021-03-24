@@ -7,8 +7,10 @@ function addAll<A>(s: Set<A>, vs: Iterable<A>): void {
 		s.add(v);
 }
 
+type Relation<A, B> = Map<A, Set<B>>;
+
 // expand the relation to its transitive closure
-function transitiveClose<A>(rel: Map<A, Set<A>>): void {
+function transitiveClose<A>(rel: Relation<A, A>): void {
 	let changed: boolean = true;
 	while (changed) {
 		changed = false;
@@ -26,7 +28,7 @@ function transitiveClose<A>(rel: Map<A, Set<A>>): void {
 }
 
 // elements related to themselves
-function identities<A>(rel: Map<A, Set<A>>): Set<A> {
+function identities<A>(rel: Relation<A, A>): Set<A> {
 	let cyclic = new Set<A>();
 	for (const [x, ys] of rel.entries())
 		if (ys.has(x))
@@ -36,10 +38,10 @@ function identities<A>(rel: Map<A, Set<A>>): Set<A> {
 
 // Statically computable properties of a grammar
 class GrammarProperties {
-	private unreachable: Set<string>;
-	private unrealizable: Set<string>;
-	private nullable: Set<string>;
-	private cyclic: Set<string>;
+	private readonly unreachable: Set<string>;
+	private readonly unrealizable: Set<string>;
+	private readonly nullable: Set<string>;
+	private readonly cyclic: Set<string>;
 
 	constructor(private readonly grammar: Grammar) {
 		this.unreachable = this.computeUnreachable();
@@ -138,7 +140,7 @@ class GrammarProperties {
 	// identify cyclic nonterminals
 	// assumes that nullable has already been set
 	private computeCyclic(): Set<string> {
-		let expansion: Map<string, Set<string>> =
+		let expansion: Relation<string, string> =
 			this.directExpansion();
 		transitiveClose(expansion);
 		return identities(expansion);
@@ -146,7 +148,7 @@ class GrammarProperties {
 
 	// For each nonterminal A, find nonterminals B that occur in
 	// productions of the form A -> uBv where u and v are nullable.
-	private directExpansion(): Map<string, Set<string>> {
+	private directExpansion(): Relation<string, string> {
 		let expansion = new Map<string, Set<string>>();
 		for (const nt of this.grammar.nonTerminals()) {
 			let s = new Set<string>();
