@@ -26,15 +26,11 @@ function equalList<T extends Equality<T>>(xs: List<T>, ys: List<T>): boolean {
 	return ys === null;
 }
 
-function* listIterator<T>(list: List<T>): Iterator<T> {
-	while (list !== null) {
-		yield list.head;
-		list = list.tail;
-	}
-}
-
 function elements<T>(list: List<T>): Iterable<T> {
 	return {
-		[Symbol.iterator](): Iterator<T> { return listIterator(list); }
+		[Symbol.iterator]: function*() {
+			for (let p = list; p !== null; p = p.tail)
+				yield p.head;
+		}
 	};
 }
