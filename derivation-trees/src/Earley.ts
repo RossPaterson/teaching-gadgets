@@ -3,106 +3,121 @@
 /// <reference path="ParseTree.ts" />
 /// <reference path="Queue.ts" />
 
-function equalArray<T>(a: Array<T>, b: Array<T>) {
-	if (a === b)
-		return true;
-	if (a.length != b.length)
-		return false;
-	for (const i in a)
-		if (a[i] !== b[i])
-			return false;
-	return true;
+function precondition(cond: boolean): void {
+	if (! cond)
+		throw "precondition does not hold";
 }
 
-// scanning right to left
+function newArray<T>(n: number): Array<Array<T>> {
+	let arr: Array<Array<T>> = [];
+	for (let i: number = 0; i < n; i++)
+		arr.push([]);
+	return arr;
+}
+
+function equalArray<T>(a: Array<T>, b: Array<T>) {
+	return a === b ||
+		a.length === b.length && a.every((v, i) => v === b[i]);
+}
+
+// An item of the form A -> u.v, where A -> uv is a production in the grammar.
+// This implementation scans from right to left, building a list of
+// parse trees corresponding to the symbols of v.
 class EarleyItem {
-	constructor(private readonly nt: string,
-		private readonly parsed: List<ParseTree>,
-		private readonly rhs: Array<string>, // position in rhs
+	constructor(
+		// nonterminal of the left of the production
+		private readonly nt: string,
+		//right-hand side of the production
+		private readonly rhs: Array<string>,
+		// position in rhs, between 0 and rhs.length
 		private readonly pos: number,
+		// rhs.length-pos parse trees
+		private readonly parsed: List<ParseTree>,
+		// position in the input string of the end of the item
 		private readonly finish: number) {}
 
-	// advance of item
+	// advance of item, given a parse tree for the nonterminal on
+	// the left of the dot
 	advance(t: ParseTree): EarleyItem {
-		if (this.finished())
-			throw "advancing at end";
-		return new EarleyItem(this.nt,
-			new Cons<ParseTree>(t, this.parsed),
-			this.rhs, this.pos - 1, this.finish);
+		precondition(! this.finished());
+		return new EarleyItem(this.nt, this.rhs, this.pos - 1,
+			new Cons<ParseTree>(t, this.parsed), this.finish);
 	}
 
 	equals(o: EarleyItem): boolean {
-		if (o === this)
-			return true;
-		return this.finish === o.finish && this.pos === o.pos &&
+		return o === this ||
+			this.finish === o.finish && this.pos === o.pos &&
 			this.nt === o.nt && equalArray(this.rhs, o.rhs) &&
 			equalList(this.parsed, o.parsed);
 	}
 
+	// Have we matched the whole of the rhs?
 	finished(): boolean { return this.pos === 0; }
 
+	// Have we matched the whole of the rhs for the specified nonterminal?
 	finishedWith(nt: string): boolean {
 		return this.pos === 0 && this.nt === nt;
 	}
 
-	match(sym: string): boolean {
-		return this.pos > 0 && this.rhs[this.pos-1] === sym;
+	// Does the given terminal occur immediately to the left of the dot?
+	match(tsym: string): boolean {
+		return this.pos > 0 && this.rhs[this.pos-1] === tsym;
 	}
 
+	// The symbol immediately to the left of the dot
 	current(): string {
-		if (this.finished())
-			throw "current at end";
+		precondition(! this.finished());
 		return this.rhs[this.pos-1];
 	}
 
+	// position in the input string immediately to te right of this item
+	start(): number { return this.finish; }
+
+	// parse tree for a completed production
 	complete(): NonTerminalTree {
-		if (! this.finished())
-			throw "not complete";
+		precondition(this.finished());
 		return new NonTerminalTree(this.nt, this.parsed);
 	}
 
-	start(): number { return this.finish; }
-
+	// parse tree for a completed production of the start symbol
 	completeTop(): NonTerminalTree {
-		if (! this.finished())
-			throw "current at end";
+		precondition(this.finished());
 		if (this.parsed === null)
-			throw "null list";
-		if (this.parsed.tail !== null)
-			throw "non-singleton list";
+			throw "requires non-empty list";
+		precondition(this.parsed.tail === null);
 		return this.parsed.head as NonTerminalTree;
 	}
 }
 
 // item at end of a rhs
 function endItem(nt: string, rhs: Array<string>, finish: number): EarleyItem {
-	return new EarleyItem(nt, null, rhs, rhs.length, finish);
+	return new EarleyItem(nt, rhs, rhs.length, null, finish);
 }
 
+// additional start nonterminal, with a unit production S' -> S
 const START: string = "Start";
+
 const EXPANSION_LIMIT: number = 100;
 
 type ParseResult = {
-	complete: boolean,
-	trees: Array<NonTerminalTree>
+	complete: boolean, // all possible parses are included in trees
+	trees: Array<NonTerminalTree> // possible parses
 	};
 
 class Earley {
 	constructor(private readonly grammar: Grammar) {}
 
 	parse(input: Array<string>): ParseResult {
-		let states: Array<Array<EarleyItem>> = [];
-		for (let i: number = 0; i <= input.length; i++)
-			states.push([]);
+		let states: Array<Array<EarleyItem>> =
+			newArray(input.length+1);
 
 		let truncated: boolean = false;
 		for (let pos: number = input.length; pos >= 0; pos--) {
 			let queue = new Queue<EarleyItem>();
 			if (pos === input.length) {
 				// initial state (starting from end of string)
-				const rhs0: Array<string> =
-					[this.grammar.getStart()];
-				queue.add(endItem(START, rhs0, pos));
+				queue.add(endItem(START,
+					[this.grammar.getStart()], pos));
 			} else {
 				// scan a terminal symbol
 				const nextSym: string = input[pos];
@@ -123,13 +138,7 @@ class Earley {
 					break;
 				}
 				const item: EarleyItem = queue.remove();
-				let seen: boolean = false;
-				for (const s of state)
-					if (s.equals(item)) {
-						seen = true;
-						break;
-					}
-				if (! seen) {
+				if (! state.some((s) => s.equals(item))) {
 					state.push(item);
 					// expand the item
 					if (item.finished()) {
@@ -147,8 +156,7 @@ class Earley {
 						// predict: expand a nonterminal
 						const nt: string = item.current();
 						if (this.grammar.isNonTerminal(nt)) {
-							const rhss: Array<Array<string>> = this.grammar.expansions(nt);
-							for (const rhs of rhss)
+							for (const rhs of this.grammar.expansions(nt))
 								queue.add(endItem(nt, rhs, pos));
 							for (const t of empties)
 								if (t.nonTerminal() === nt)
