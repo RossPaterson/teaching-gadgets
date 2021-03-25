@@ -2,11 +2,13 @@
 type List<T> = Cons<T> | null;
 
 class Cons<T> {
-	constructor(public readonly head: T, public readonly tail: List<T>) {}
+	constructor(
+		public readonly head: T,
+		public readonly tail: List<T>) {}
 }
 
-function cons<T>(x: T) {
-	return function (xs: List<T>) { return new Cons<T>(x, xs); };
+function cons<T>(x: T): (xs: List<T>) => List<T> {
+	return (xs: List<T>) => new Cons<T>(x, xs);
 }
 
 interface Equality<T> { equals(o: T): boolean; }

@@ -14,10 +14,8 @@ function removeChildren(element: HTMLElement): void {
 
 // form an HTML unordered list from a list of strings
 function bulletList(items: Array<string>): HTMLElement {
-	const listItem = function (item: string) {
-		return simpleElement("li", item);
-	}
-	return compoundElement("ul", items.map(listItem));
+	return compoundElement("ul",
+		items.map((item: string) => simpleElement("li", item)));
 }
 
 // create an HTML element with string content
