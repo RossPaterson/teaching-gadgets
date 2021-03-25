@@ -21,17 +21,14 @@ export function regexLanguage(element_id: string, re_text: string): void {
 
 // String representing the language denoted by e, of length at most n (approx)
 function showLanguage(n: number, e: Regexp): string {
-	const xs: Iterator<string> = catAll(e.language());
 	let ss: Array<string> = [];
-	let curr_x: IteratorResult<string> = xs.next();
-	while (! curr_x.done) {
-		n -= curr_x.value.length + 2;
+	for (const s of strings(e)) {
+		n -= s.length + 2;
 		if (n < 0) {
 			ss.push("...");
 			break;
 		}
-		ss.push(curr_x.value);
-		curr_x = xs.next();
+		ss.push(s);
 	}
 	if (ss[0] === "")
 		ss[0] = "ε";
@@ -41,11 +38,9 @@ function showLanguage(n: number, e: Regexp): string {
 // Scanner for recursive descent parser for regular expressions
 
 class CharScanner {
-	private str: string;
 	private pos: number;
 
-	constructor(str: string) {
-		this.str = str;
+	constructor(private readonly str: string) {
 		this.pos = 0;
 	}
 
@@ -135,15 +130,13 @@ function isAlphaNum(c: string): boolean {
 // in alphabetical order without duplicates.
 type Language = Iterator<Array<string>>;
 
-abstract class Regexp {
-	abstract language(): Language;
+interface Regexp {
+	language(): Language;
 }
 
 // empty string
-class EmptyExpr extends Regexp {
-	constructor() {
-		super();
-	}
+class EmptyExpr implements Regexp {
+	constructor() {}
 
 	language(): Language {
 		return emptyString();
@@ -151,13 +144,8 @@ class EmptyExpr extends Regexp {
 }
 
 // single character
-class SingleExpr extends Regexp {
-	private readonly c: string;
-
-	constructor(c: string) {
-		super();
-		this.c = c;
-	}
+class SingleExpr implements Regexp {
+	constructor(private readonly c: string) {}
 
 	language(): Language {
 		return singleLetter(this.c);
@@ -165,15 +153,9 @@ class SingleExpr extends Regexp {
 };
 
 // e1 | e2
-class OrExpr extends Regexp {
-	private readonly e1: Regexp;
-	private readonly e2: Regexp;
-
-	constructor(e1: Regexp, e2: Regexp) {
-		super();
-		this.e1 = e1;
-		this.e2 = e2;
-	}
+class OrExpr implements Regexp {
+	constructor(private readonly e1: Regexp,
+		private readonly e2: Regexp) {}
 
 	language(): Language {
 		return longZip(merge, this.e1.language(), this.e2.language());
@@ -181,15 +163,9 @@ class OrExpr extends Regexp {
 }
 
 // e1 e2
-class AndExpr extends Regexp {
-	private readonly e1: Regexp;
-	private readonly e2: Regexp;
-
-	constructor(e1: Regexp, e2: Regexp) {
-		super();
-		this.e1 = e1;
-		this.e2 = e2;
-	}
+class AndExpr implements Regexp {
+	constructor(private readonly e1: Regexp,
+		private readonly e2: Regexp) {}
 
 	language(): Language {
 		return catLangs(this.e1.language(), this.e2.language());
@@ -197,29 +173,24 @@ class AndExpr extends Regexp {
 }
 
 // e*
-class StarExpr extends Regexp {
-	private readonly e: Regexp;
-
-	constructor(e: Regexp) {
-		super();
-		this.e = e;
-	}
+class StarExpr implements Regexp {
+	constructor(private readonly e: Regexp) {}
 
 	language(): Language {
 		return starLang(this.e.language());
 	}
 }
 
+function strings(e: Regexp): Iterable<string> {
+	return { [Symbol.iterator]: () => catAll(e.language()) };
+}
+
 // Iterator combinators
 
 // Iterator of arrays -> iterator of elements
 function* catAll<T>(xss: Iterator<Array<T>>): Iterator<T> {
-	let curr_xs: IteratorResult<Array<T>> = xss.next();
-	while (! curr_xs.done) {
-		for (let value of curr_xs.value)
-			yield(value);
-		curr_xs = xss.next();
-	}
+	for (let curr_xs = xss.next(); ! curr_xs.done; curr_xs = xss.next())
+		yield* curr_xs.value.iterator();
 }
 
 // consumes the argument iterators
@@ -270,8 +241,8 @@ function* catLangs(l1: Language, l2: Language): Language {
 		}
 		// front1 & front2 contain strings of length up to n
 		// construct strings of length n
-		let start: number = Math.max(0, n - front2.length + 1);
-		let finish: number = Math.min(n, front1.length - 1);
+		const start: number = Math.max(0, n - front2.length + 1);
+		const finish: number = Math.min(n, front1.length - 1);
 		if (start > finish)
 			return;
 		let conc: Array<string> = [];
@@ -302,7 +273,7 @@ function* starLang(l: Language): Language {
 			n_strings = l.next();
 		}
 		// construct strings of length n
-		let finish: number = Math.min(n, l_front.length - 1);
+		const finish: number = Math.min(n, l_front.length - 1);
 		conc = [];
 		for (let i: number = 1; i <= finish; i++) {
 			conc = merge(conc, catLang(l_front[i], l_star[n-i]));
@@ -342,9 +313,9 @@ function merge(xs: Array<string>, ys: Array<string>): Array<string> {
 // concatenate all combinations
 function catLang(xs: Array<string>, ys: Array<string>): Array<string> {
 	let all: Array<string> = [];
-	for (let x of xs) {
+	for (const x of xs) {
 		let xys: Array<string> = [];
-		for (let y of ys)
+		for (const y of ys)
 			xys.push(x + y);
 		all = merge(all, xys);
 	}
