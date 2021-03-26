@@ -190,7 +190,7 @@ function strings(e: Regexp): Iterable<string> {
 // Iterator of arrays -> iterator of elements
 function* catAll<T>(xss: Iterator<Array<T>>): Iterator<T> {
 	for (let curr_xs = xss.next(); ! curr_xs.done; curr_xs = xss.next())
-		yield* curr_xs.value.iterator();
+		yield* curr_xs.value;
 }
 
 // consumes the argument iterators
