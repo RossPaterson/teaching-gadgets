@@ -11,13 +11,10 @@
         "noImplicitReturns": true,
         "noImplicitThis": true,
         "removeComments": true,
-        "outDir" : "javascript",
+        "outFile": "javascript/regex_language.js",
         "noEmitOnError": true
     },
     "files": [
-        "src/applet.ts",
-        "src/bararray.ts",
-        "src/codeapplet.ts",
-        "src/subsetsum.ts"
+        "src/regex_language.ts"
     ]
 }
