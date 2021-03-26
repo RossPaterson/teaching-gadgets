@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="javascript/regex_language.js"></script>
+<style>
+body {
+	font-family: sans-serif;
+	margin-left: 20px;
+}
+table.tool {
+	margin-right: 4em; margin-bottom: 4ex;
+	background-color: #ffe4b5;
+	border: #a0522d solid 2px;
+	border-radius: 8px;
+	padding: 12pt;
+}
+th {
+	text-align: left;
+}
+</style>
+<title>Regular Expressions and Languages</title>
+</head>
+
+<body>
+<h1>Regular Expressions and Languages</h1>
+
+<p>Type a regular expression in one of the boxes (they all do the same thing)
+and hit return to see (part of) the language it describes.
+<table class="tool">
+<tr><th>Regular expression</th><th>Language</th></tr>
+<tr>
+<td><input type="text" size="20" value="" onchange="regexLanguage('re-language-1', this.value);"/></td>
+<td id="re-language-1"></td>
+</tr>
+<tr>
+<td><input type="text" size="20" value="" onchange="regexLanguage('re-language-2', this.value);"/></td>
+<td id="re-language-2"></td>
+</tr>
+<tr>
+<td><input type="text" size="20" value="" onchange="regexLanguage('re-language-3', this.value);"/></td>
+<td id="re-language-3"></td>
+</tr>
+</table>
+
+<p>Some things to try:
+<ul>
+<li><code>a(a|b)*</code>
+<li><code>(a|b)*a(a|b)*</code> <!-- strings containing at least one a -->
+<li><code>((a|b)(a|b))*</code> <!-- strings of even length -->
+<li><code>(a|b)((a|b)(a|b))*</code> <!-- strings of odd length -->
+<li><code>b*ab*</code> <!-- strings containing exactly one a -->
+<li><code>b*ab*ab*</code> <!-- strings containing exactly two a's -->
+</ul>
+
+</body>
+</html>
