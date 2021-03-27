@@ -6,32 +6,14 @@
 /// <reference path="ParseTree.ts" />
 /// <reference path="SVG.ts" />
 
-function symList(s: string): Array<string> {
-	let cs = [];
-	for (let i = 0; i < s.length; i++) {
-		const c: string = s.charAt(i);
-		if (c !== ' ')
-			cs.push(c);
-	}
-	return cs
-}
-
-function parseRHS(rhs: string): Array<Array<string>> {
-	return rhs.split("|").map(symList);
-}
-
-function getGrammar(): Grammar {
-	let grammar: Grammar = new Grammar();
-	for (let i: number = 1; i <= 10; i++) {
-		const lhs: string = getParameter("lhs" + i);
-		const rhs: string = getParameter("rhs" + i);
-		if (lhs !== "") {
-			const prods: Array<Array<string>> = parseRHS(rhs);
-			for (const i in prods)
-				grammar.addProduction(lhs, prods[i]);
-		}
-	}
-	return grammar;
+// execute the action if return is typed in the named field
+function addReturnAction(name: string, action: () => void): void {
+	const element: HTMLElement | null = document.getElementById(name);
+	if (element)
+		element.onkeydown = function (e) {
+			if (e.keyCode == 13)
+				action();
+		};
 }
 
 const LIMIT: number = 10000;
@@ -68,6 +50,27 @@ function deriveSentence(): void {
 	treeGallery(caption, result.trees);
 }
 
+function getGrammar(): Grammar {
+	let grammar: Grammar = new Grammar();
+	for (let i: number = 1; i <= 10; i++) {
+		const lhs: string = getParameter("lhs" + i);
+		const rhs: string = getParameter("rhs" + i);
+		if (lhs !== "")
+			for (const prod of parseRHS(rhs))
+				grammar.addProduction(lhs, prod);
+	}
+	return grammar;
+}
+
+function parseRHS(rhs: string): Array<Array<string>> {
+	return rhs.split("|").map(symList);
+}
+
+// individual characters of s, ignoring spaces
+function symList(s: string): Array<string> {
+	return Array.from(s).filter((c) => c !== ' ');
+}
+
 function checkGrammar(g: Grammar): void {
 	const properties: GrammarProperties = new GrammarProperties(g);
 	let issues: Array<string> = [];
@@ -75,15 +78,15 @@ function checkGrammar(g: Grammar): void {
         const unrealizable: Set<string> = properties.getUnrealizable();
         const cyclic: Set<string> = properties.getCyclic();
 	if (unreachable.size > 0)
-		issues.push(subjectNTs(unreachable) +
-			"unreachable from the start symbol " + g.getStart() + ".");
+		issues.push(describeNTs(unreachable,
+			"unreachable from the start symbol " + g.getStart()));
 	if (unrealizable.size > 0)
-		issues.push(subjectNTs(unrealizable) +
-			"unrealizable (cannot generate any strings).");
+		issues.push(describeNTs(unrealizable,
+			"unrealizable (cannot generate any strings)"));
 	if (cyclic.size > 0)
-		issues.push(subjectNTs(cyclic) +
-			(properties.infinitelyAmbiguous() ?
-				"cyclic, so some strings have infinitely many derivations" : "cyclic") + ".");
+		issues.push(describeNTs(cyclic,
+			properties.infinitelyAmbiguous() ?
+				"cyclic, so some strings have infinitely many derivations" : "cyclic"));
 
 	const problems: HTMLElement | null = document.getElementById("problems");
 	if (problems) {
@@ -95,17 +98,13 @@ function checkGrammar(g: Grammar): void {
 	}
 }
 
-function subjectNTs(nts: Set<string>): string {
-	let str: string = nts.size > 1 ? "Nonterminals " : "Nonterminal ";
-	let first: boolean = true;
-	for (const nt of nts.values())
-		if (first) {
-			str = str + nt;
-			first = false;
-		} else
-			str = str + ", " + nt;
-	str = str + (nts.size > 1 ? " are " : " is ");
-	return str;
+// Sentence saying a nonempty set of nonterminals have a property
+function describeNTs(nts: Set<string>, adjective: string): string {
+	const plural: boolean = nts.size > 1;
+	return (plural ? "Nonterminals " : "Nonterminal ") +
+		Array.from(nts).join(", ") +
+		(plural ? " are " : " is ") +
+		adjective + ".";
 }
 
 function treeGallery(caption: string, trees: Array<NonTerminalTree>): void {
@@ -117,14 +116,4 @@ function treeGallery(caption: string, trees: Array<NonTerminalTree>): void {
 		for (const tree of trees)
 			gallery.appendChild(drawTree(tree));
 	}
-}
-
-// execute the action if return is typed in the named field
-function addReturnAction(name: string, action: () => void): void {
-	const element: HTMLElement | null = document.getElementById(name);
-	if (element)
-		element.onkeydown = function (e) {
-			if (e.keyCode == 13)
-				action();
-		};
 }
