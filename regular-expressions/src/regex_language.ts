@@ -1,5 +1,5 @@
-/// <reference path="CharScanner.ts" />
 /// <reference path="Language.ts" />
+/// <reference path="Parser.ts" />
 /// <reference path="RegExpr.ts" />
 namespace Regex {
 
@@ -15,7 +15,7 @@ namespace Regex {
 export function regexLanguage(element_id: string, re_text: string): void {
 	let text: string = "";
 	try {
-		text = showLanguage(150, allExpr(new CharScanner(re_text)));
+		text = showLanguage(150, parseRegExpr(re_text));
 	} catch (err) {
 		text = `<em>Malformed expression: ${err}</em>`;
 	}
@@ -25,7 +25,7 @@ export function regexLanguage(element_id: string, re_text: string): void {
 // String representing the language denoted by e, of length at most n (approx)
 function showLanguage(n: number, e: RegExpr): string {
 	let ss: Array<string> = [];
-	for (const s of strings(e.language())) {
+	for (const s of strings(language(e))) {
 		n -= s.length + 2;
 		if (n < 0) {
 			ss.push("...");
@@ -37,6 +37,14 @@ function showLanguage(n: number, e: RegExpr): string {
 		ss[0] = "ε";
 	return `{ ${ss.join(", ")} }`;
 }
+
+const language: (e: RegExpr) => Language = foldRegExpr({
+	emptyExpr: emptyString,
+	singleExpr: singleLetter,
+	orExpr: unionLangs,
+	andExpr: catLangs,
+	starExpr: starLang
+	});
 
 } // namespace Regex
 
