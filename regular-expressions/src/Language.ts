@@ -22,7 +22,7 @@ export function* singleLetter(c: string): Language {
 }
 
 // consumes the argument iterators
-export function* unionLangs(l1: Language, l2: Language): Language {
+export function unionLangs(l1: Language, l2: Language): Language {
 	return longZip(merge, l1, l2);
 }
 
