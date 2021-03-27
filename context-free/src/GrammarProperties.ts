@@ -1,6 +1,8 @@
 /// <reference path="Grammar.ts" />
 /// <reference path="Queue.ts" />
 
+namespace CFG {
+
 // add all elements of vs to s
 function addAll<A>(s: Set<A>, vs: Iterable<A>): void {
 	for (const v of vs)
@@ -37,7 +39,7 @@ function identities<A>(rel: Relation<A, A>): Set<A> {
 }
 
 // Statically computable properties of a grammar
-class GrammarProperties {
+export class GrammarProperties {
 	private readonly unreachable: Set<string>;
 	private readonly unrealizable: Set<string>;
 	private readonly nullable: Set<string>;
@@ -180,3 +182,5 @@ class GrammarProperties {
 	}
 
 }
+
+} // namespace CFG

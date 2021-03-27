@@ -1,6 +1,8 @@
 /// <reference path="List.ts" />
 /// <reference path="SVG.ts" />
 
+namespace CFG {
+
 const HSEP: number = 30;
 const VSEP: number = 45;
 const STRIP_HEIGHT: number = 30;
@@ -15,7 +17,7 @@ const NT_LINE_COLOUR: string = "black";
 const NT_NULL_COLOUR: string = "#aaaaaa";
 const NT_NULL_SYMBOL: string = "ε";
 
-abstract class ParseTree implements Equality<ParseTree> {
+export abstract class ParseTree implements Equality<ParseTree> {
 	constructor() {}
 
 	abstract height(): number;
@@ -28,7 +30,7 @@ abstract class ParseTree implements Equality<ParseTree> {
 	abstract equals(o: ParseTree): boolean;
 }
 
-class NonTerminalTree extends ParseTree {
+export class NonTerminalTree extends ParseTree {
 	// derived values
 	private readonly ht: number;
 	private readonly wd: number;
@@ -108,7 +110,7 @@ class NonTerminalTree extends ParseTree {
 	}
 }
 
-class TerminalTree extends ParseTree {
+export class TerminalTree extends ParseTree {
 	constructor(private readonly sym: string) { super(); }
 
 	height(): number { return 1; }
@@ -144,7 +146,7 @@ class TerminalTree extends ParseTree {
 
 // compare trees first by length of generated sentence, then generated
 // text, then tree height
-function compareNTs(a: NonTerminalTree, b: NonTerminalTree): number {
+export function compareNTs(a: NonTerminalTree, b: NonTerminalTree): number {
 	const a_sentence: string = a.getSentence();
 	const b_sentence: string = b.getSentence();
 	if (a_sentence.length !== b_sentence.length)
@@ -156,7 +158,7 @@ function compareNTs(a: NonTerminalTree, b: NonTerminalTree): number {
 	return a.height() - b.height();
 }
 
-function drawTree(t: ParseTree): SVGElement {
+export function drawTree(t: ParseTree): SVGElement {
 	let es: Array<SVGElement> = []
 	es.push(svgElement("rect", [
 		numAttr("width", t.width()*HSEP),
@@ -176,3 +178,5 @@ function drawTree(t: ParseTree): SVGElement {
 		attr("font-family", "sans-serif"),
 		numAttr("font-size", 15)], es);
 }
+
+} // namespace CFG

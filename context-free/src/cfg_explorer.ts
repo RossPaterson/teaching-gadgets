@@ -6,8 +6,10 @@
 /// <reference path="ParseTree.ts" />
 /// <reference path="SVG.ts" />
 
+namespace CFG {
+
 // execute the action if return is typed in the named field
-function addReturnAction(name: string, action: () => void): void {
+export function addReturnAction(name: string, action: () => void): void {
 	const element: HTMLElement | null = document.getElementById(name);
 	if (element)
 		element.onkeydown = function (e) {
@@ -18,7 +20,7 @@ function addReturnAction(name: string, action: () => void): void {
 
 const LIMIT: number = 10000;
 
-function allDerivations(): void {
+export function allDerivations(): void {
 	const grammar: Grammar = getGrammar();
 
 	checkGrammar(grammar);
@@ -34,7 +36,7 @@ function allDerivations(): void {
 	treeGallery(caption, trees);
 }
 
-function deriveSentence(): void {
+export function deriveSentence(): void {
 	const grammar: Grammar = getGrammar();
 	const sentence: string = getParameter("sentence");
 
@@ -117,3 +119,5 @@ function treeGallery(caption: string, trees: Array<NonTerminalTree>): void {
 			gallery.appendChild(drawTree(tree));
 	}
 }
+
+} // namespace CFG

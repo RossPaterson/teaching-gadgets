@@ -2,7 +2,9 @@
 /// <reference path="List.ts" />
 /// <reference path="ParseTree.ts" />
 
-class Expansion {
+namespace CFG {
+
+export class Expansion {
 	// total size (width*height) of derivation trees
 	private count: number;
 	// number of times the languages have been expanded
@@ -65,7 +67,7 @@ class Expansion {
 			let new_strs: Array<List<ParseTree>> = [];
 			for (const t of exps)
 				for (const str of strs)
-					new_strs.push(new Cons<ParseTree>(t, str));
+					new_strs.push(cons(<ParseTree>t)(str));
 			return new_strs;
 		}
 	}
@@ -91,3 +93,5 @@ class Expansion {
 
 	complete(): boolean { return this.finished; }
 }
+
+} // namespace CFG

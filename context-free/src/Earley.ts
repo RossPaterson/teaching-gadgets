@@ -3,6 +3,8 @@
 /// <reference path="ParseTree.ts" />
 /// <reference path="Queue.ts" />
 
+namespace CFG {
+
 function precondition(cond: boolean): void {
 	if (! cond)
 		throw "precondition does not hold";
@@ -41,7 +43,7 @@ class EarleyItem {
 	advance(t: ParseTree): EarleyItem {
 		precondition(! this.finished());
 		return new EarleyItem(this.nt, this.rhs, this.pos - 1,
-			new Cons<ParseTree>(t, this.parsed), this.finish);
+			cons(t)(this.parsed), this.finish);
 	}
 
 	equals(o: EarleyItem): boolean {
@@ -99,12 +101,12 @@ const START: string = "Start";
 
 const EXPANSION_LIMIT: number = 100;
 
-type ParseResult = {
+export type ParseResult = {
 	complete: boolean, // all possible parses are included in trees
 	trees: Array<NonTerminalTree> // possible parses
 	};
 
-class Earley {
+export class Earley {
 	constructor(private readonly grammar: Grammar) {}
 
 	parse(input: Array<string>): ParseResult {
@@ -175,3 +177,5 @@ class Earley {
 		return { complete: ! truncated, trees: trees };
 	}
 }
+
+} // namespace CFG

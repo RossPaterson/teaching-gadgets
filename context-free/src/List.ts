@@ -1,5 +1,7 @@
+namespace CFG {
+
 // Simple lists
-type List<T> = Cons<T> | null;
+export type List<T> = Cons<T> | null;
 
 class Cons<T> {
 	constructor(
@@ -7,14 +9,14 @@ class Cons<T> {
 		public readonly tail: List<T>) {}
 }
 
-function cons<T>(x: T): (xs: List<T>) => List<T> {
+export function cons<T>(x: T): (xs: List<T>) => List<T> {
 	return (xs: List<T>) => new Cons<T>(x, xs);
 }
 
-interface Equality<T> { equals(o: T): boolean; }
+export interface Equality<T> { equals(o: T): boolean; }
 
 // elementwise equality test for lists
-function equalList<T extends Equality<T>>(xs: List<T>, ys: List<T>): boolean {
+export function equalList<T extends Equality<T>>(xs: List<T>, ys: List<T>): boolean {
 	while (xs !== null) {
 		if (ys === null)
 			return false;
@@ -28,11 +30,13 @@ function equalList<T extends Equality<T>>(xs: List<T>, ys: List<T>): boolean {
 	return ys === null;
 }
 
-function elements<T>(list: List<T>): Iterable<T> {
+export function elements<T>(list: List<T>): Iterable<T> {
 	return {
 		[Symbol.iterator]: function*() {
 			for (let p = list; p !== null; p = p.tail)
 				yield p.head;
 		}
 	};
+}
+
 }

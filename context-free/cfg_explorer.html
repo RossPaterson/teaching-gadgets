@@ -86,24 +86,24 @@ S &#x2192; aSb|c
 <div id="problems"></div>
 
 <div id="controls">
-<p><button onclick="allDerivations()">All possible derivations</button>
+<p><button onclick="CFG.allDerivations()">All possible derivations</button>
 <p><input type="text" id="sentence"/>
-<button onclick="deriveSentence()">Derivations of this string</button>
+<button onclick="CFG.deriveSentence()">Derivations of this string</button>
 </div>
 
 <script type="text/javascript">
 // also execute button actions if return is typed in larger fields
-addReturnAction('rhs1', allDerivations);
-addReturnAction('rhs2', allDerivations);
-addReturnAction('rhs3', allDerivations);
-addReturnAction('rhs4', allDerivations);
-addReturnAction('rhs5', allDerivations);
-addReturnAction('rhs6', allDerivations);
-addReturnAction('rhs7', allDerivations);
-addReturnAction('rhs8', allDerivations);
-addReturnAction('rhs9', allDerivations);
-addReturnAction('rhs10', allDerivations);
-addReturnAction('sentence', deriveSentence);
+CFG.addReturnAction('rhs1', CFG.allDerivations);
+CFG.addReturnAction('rhs2', CFG.allDerivations);
+CFG.addReturnAction('rhs3', CFG.allDerivations);
+CFG.addReturnAction('rhs4', CFG.allDerivations);
+CFG.addReturnAction('rhs5', CFG.allDerivations);
+CFG.addReturnAction('rhs6', CFG.allDerivations);
+CFG.addReturnAction('rhs7', CFG.allDerivations);
+CFG.addReturnAction('rhs8', CFG.allDerivations);
+CFG.addReturnAction('rhs9', CFG.allDerivations);
+CFG.addReturnAction('rhs10', CFG.allDerivations);
+CFG.addReturnAction('sentence', CFG.deriveSentence);
 </script>
 
 <div id="gallery"></div>

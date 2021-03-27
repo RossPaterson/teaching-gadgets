@@ -1,20 +1,22 @@
+namespace CFG {
+
 // Scalable Vector Graphics
 
 // attribute of an SVG element
 type Attribute = { name: string, value: string };
 
 // a string-valued attribute
-function attr(n: string, v: string): Attribute {
+export function attr(n: string, v: string): Attribute {
 	return { name: n, value: v };
 }
 
 // a numeric attribute
-function numAttr(n: string, v: number): Attribute {
+export function numAttr(n: string, v: number): Attribute {
 	return { name: n, value: String(v) };
 }
 
 // general SVG element
-function svgElement(name: string, attrs: Array<Attribute>, children: Array<SVGElement>): SVGElement {
+export function svgElement(name: string, attrs: Array<Attribute>, children: Array<SVGElement>): SVGElement {
 	const e: SVGElement = document.createElementNS("http://www.w3.org/2000/svg", name);
 	for (const attr of attrs)
 		e.setAttribute(attr.name, attr.value);
@@ -26,7 +28,7 @@ function svgElement(name: string, attrs: Array<Attribute>, children: Array<SVGEl
 // special cases
 
 // a collection of lines with the specified colour
-function lines(colour: string, children: Array<SVGElement>): SVGElement {
+export function lines(colour: string, children: Array<SVGElement>): SVGElement {
 	return svgElement("g", [
 		attr("stroke", colour),
 		attr("stroke-width", "1"),
@@ -34,7 +36,7 @@ function lines(colour: string, children: Array<SVGElement>): SVGElement {
 }
 
 // an SVG line element
-function line(x1: number, y1: number, x2: number, y2: number): SVGElement {
+export function line(x1: number, y1: number, x2: number, y2: number): SVGElement {
 	return svgElement("line", [
 		numAttr("x1", x1),
 		numAttr("y1", y1),
@@ -43,7 +45,7 @@ function line(x1: number, y1: number, x2: number, y2: number): SVGElement {
 }
 
 // an SVG text element
-function text(x: number, y: number, colour: string, s: string): SVGElement {
+export function text(x: number, y: number, colour: string, s: string): SVGElement {
 	const element = svgElement("text", [
 		numAttr("x", x),
 		numAttr("y", y),
@@ -52,3 +54,5 @@ function text(x: number, y: number, colour: string, s: string): SVGElement {
 	element.textContent = s;
 	return element;
 }
+
+} // namespace CFG

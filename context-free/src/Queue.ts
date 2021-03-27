@@ -1,3 +1,5 @@
+namespace CFG {
+
 // Simple queues
 
 class QElement<T> {
@@ -6,7 +8,7 @@ class QElement<T> {
 	constructor(public readonly value: T) { this.next = null; }
 }
 
-class Queue<T> {
+export class Queue<T> {
 	// invariant: if one of these is null, they both are
 	private front: QElement<T> | null;
 	private back: QElement<T> | null;
@@ -37,3 +39,5 @@ class Queue<T> {
 		throw "empty queue";
 	}
 }
+
+} // namespace CFG
