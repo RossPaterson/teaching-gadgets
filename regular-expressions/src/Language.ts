@@ -143,12 +143,8 @@ function merge(xs: Array<string>, ys: Array<string>): Array<string> {
 // concatenate all combinations
 function catLang(xs: Array<string>, ys: Array<string>): Array<string> {
 	let all: Array<string> = [];
-	for (const x of xs) {
-		let xys: Array<string> = [];
-		for (const y of ys)
-			xys.push(x + y);
-		all = merge(all, xys);
-	}
+	for (const x of xs)
+		all = merge(all, ys.map((y) => x + y));
 	return all;
 }
 
