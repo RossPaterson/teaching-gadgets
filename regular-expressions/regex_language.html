@@ -30,18 +30,20 @@ and hit return to see (part of) the language it describes.
 <table class="tool">
 <tr><th>Regular expression</th><th>Language</th></tr>
 <tr>
-<td><input type="text" size="20" value="" onchange="regexLanguage('re-language-1', this.value);"/></td>
-<td id="re-language-1"></td>
+<td><input id="regex-1" type="text" size="20" /></td><td id="language-1"></td>
 </tr>
 <tr>
-<td><input type="text" size="20" value="" onchange="regexLanguage('re-language-2', this.value);"/></td>
-<td id="re-language-2"></td>
+<td><input id="regex-2" type="text" size="20" /></td><td id="language-2"></td>
 </tr>
 <tr>
-<td><input type="text" size="20" value="" onchange="regexLanguage('re-language-3', this.value);"/></td>
-<td id="re-language-3"></td>
+<td><input id="regex-3" type="text" size="20" /></td><td id="language-3"></td>
 </tr>
 </table>
+<script>
+regexAndLanguage("regex-1", "language-1");
+regexAndLanguage("regex-2", "language-2");
+regexAndLanguage("regex-3", "language-3");
+</script>
 
 <p>Some things to try:
 <ul>
