@@ -8,60 +8,101 @@
 
 namespace CFG {
 
-// execute the action if return is typed in the named field
-export function addReturnAction(name: string, action: () => void): void {
-	const element: HTMLElement | null = document.getElementById(name);
-	if (element)
-		element.onkeydown = function (e) {
-			if (e.keyCode == 13)
-				action();
-		};
-}
-
+// limit on the total size of trees when expanding the grammar
 const LIMIT: number = 10000;
 
-export function allDerivations(): void {
-	const grammar: Grammar = getGrammar();
+type ProductionSource = { lhs: HTMLInputElement, rhs: HTMLInputElement }
 
-	checkGrammar(grammar);
+export class GrammarExplorer {
+	private rules: Array<ProductionSource>;
+	private errors: HTMLElement;
+	private gallery: HTMLElement;
 
-	const maxDepth: number = grammar.nonTerminals().length + 9;
-	const lgges: Expansion = new Expansion(grammar, LIMIT);
-	lgges.expandToDepth(maxDepth);
-	const trees: Array<NonTerminalTree> =
-		lgges.derivations(grammar.getStart());
-
-	const caption: string = lgges.complete() ? "All derivation trees" :
-		"Derivation trees of depth at most " + lgges.depth();
-	treeGallery(caption, trees);
-}
-
-export function deriveSentence(): void {
-	const grammar: Grammar = getGrammar();
-	const sentence: string = getParameter("sentence");
-
-	checkGrammar(grammar);
-
-	const parser: Earley = new Earley(grammar);
-	const result: ParseResult = parser.parse(symList(sentence));
-
-	const caption: string = (! result.complete ? "Some of the derivations" :
-		result.trees.length == 0 ? "There are no derivations" :
-		result.trees.length == 1 ? "Derivation tree" :
-			"Derivation trees") + " for '" + sentence + "'";
-	treeGallery(caption, result.trees);
-}
-
-function getGrammar(): Grammar {
-	let grammar: Grammar = new Grammar();
-	for (let i: number = 1; i <= 10; i++) {
-		const lhs: string = getParameter("lhs" + i);
-		const rhs: string = getParameter("rhs" + i);
-		if (lhs !== "")
-			for (const prod of parseRHS(rhs))
-				grammar.addProduction(lhs, prod);
+	constructor(rules: Array<[string, string]>,
+		errors: string, gallery: string) {
+		this.rules = rules.map(ruleSources);
+		this.errors = findElement(errors);
+		this.gallery = findElement(gallery);
+		const src = this;
+		const action = function (e: KeyboardEvent): void {
+			if (e.keyCode == 13)
+				src.allDerivations();
+		};
+		for (const rule of this.rules)
+			rule.rhs.onkeydown = action;
 	}
-	return grammar;
+
+	getGrammar(): Grammar {
+		let grammar: Grammar = new Grammar();
+		for (const rule of this.rules) {
+			const lhs: string = rule.lhs.value;
+			const rhs: string = rule.rhs.value;
+			if (lhs !== "")
+				for (const prod of parseRHS(rhs))
+					grammar.addProduction(lhs, prod);
+		}
+		return grammar;
+	}
+
+	reportIssues(issues: Array<string>): void {
+		removeChildren(this.errors);
+		if (issues.length > 0) {
+			this.errors.appendChild(simpleElement("p", "This grammar has the following problems:"));
+			this.errors.appendChild(bulletList(issues));
+		}
+	}
+
+	allDerivations(): void {
+		const grammar: Grammar = this.getGrammar();
+		this.reportIssues(grammarIssues(grammar));
+
+		const maxDepth: number = grammar.nonTerminals().length + 9;
+		const lgges: Expansion = new Expansion(grammar, LIMIT);
+		lgges.expandToDepth(maxDepth);
+		const trees: Array<NonTerminalTree> =
+			lgges.derivations(grammar.getStart());
+
+		const caption: string =
+			lgges.complete() ? "All derivation trees" :
+			"Derivation trees of depth at most " + lgges.depth();
+		setTreeGallery(caption, trees, this.gallery);
+	}
+}
+
+function ruleSources([lhs, rhs]: [string, string]): ProductionSource {
+	return { lhs: findInputElement(lhs), rhs: findInputElement(rhs) };
+}
+
+export class SentenceParser {
+	private sentence: HTMLInputElement;
+	private gallery: HTMLElement;
+
+	constructor(private grammarSrc: GrammarExplorer,
+		sentence: string, gallery: string) {
+		this.sentence = findInputElement(sentence);
+		this.gallery = findElement(gallery);
+		const src = this;
+		this.sentence.onkeydown = function (e: KeyboardEvent): void {
+			if (e.keyCode == 13)
+				src.deriveSentence();
+		};
+	}
+
+	deriveSentence(): void {
+		const grammar: Grammar = this.grammarSrc.getGrammar();
+		this.grammarSrc.reportIssues(grammarIssues(grammar));
+
+		const sentence: string = this.sentence.value;
+		const parser: Earley = new Earley(grammar);
+		const result: ParseResult = parser.parse(symList(sentence));
+
+		const caption: string = (
+			! result.complete ? "Some of the derivations" :
+			result.trees.length == 0 ? "There are no derivations" :
+			result.trees.length == 1 ? "Derivation tree" :
+				"Derivation trees") + " for '" + sentence + "'";
+		setTreeGallery(caption, result.trees, this.gallery);
+	}
 }
 
 function parseRHS(rhs: string): Array<Array<string>> {
@@ -73,7 +114,7 @@ function symList(s: string): Array<string> {
 	return Array.from(s).filter((c) => c !== ' ');
 }
 
-function checkGrammar(g: Grammar): void {
+function grammarIssues(g: Grammar): Array<string> {
 	const properties: GrammarProperties = new GrammarProperties(g);
 	let issues: Array<string> = [];
         const unreachable: Set<string> = properties.getUnreachable();
@@ -89,15 +130,7 @@ function checkGrammar(g: Grammar): void {
 		issues.push(describeNTs(cyclic,
 			properties.infinitelyAmbiguous() ?
 				"cyclic, so some strings have infinitely many derivations" : "cyclic"));
-
-	const problems: HTMLElement | null = document.getElementById("problems");
-	if (problems) {
-		removeChildren(problems);
-		if (issues.length > 0) {
-			problems.appendChild(simpleElement("p", "This grammar has the following problems:"));
-			problems.appendChild(bulletList(issues));
-		}
-	}
+	return issues;
 }
 
 // Sentence saying a nonempty set of nonterminals have a property
@@ -109,15 +142,12 @@ function describeNTs(nts: Set<string>, adjective: string): string {
 		adjective + ".";
 }
 
-function treeGallery(caption: string, trees: Array<NonTerminalTree>): void {
-	const gallery: HTMLElement | null = document.getElementById("gallery");
-	if (gallery) {
-		removeChildren(gallery);
-		gallery.appendChild(simpleElement("h2", caption));
-		trees.sort(compareNTs);
-		for (const tree of trees)
-			gallery.appendChild(drawTree(tree));
-	}
+function setTreeGallery(caption: string, trees: Array<NonTerminalTree>, target: HTMLElement): void {
+	removeChildren(target);
+	target.appendChild(simpleElement("h2", caption));
+	trees.sort(compareNTs);
+	for (const tree of trees)
+		target.appendChild(drawTree(tree));
 }
 
 } // namespace CFG

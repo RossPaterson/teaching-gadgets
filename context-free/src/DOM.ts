@@ -1,11 +1,19 @@
 namespace CFG {
 
-// get the value of the named input element
-export function getParameter(name: string): string {
+// find an element by ID
+export function findElement(name: string): HTMLElement {
 	const element: HTMLElement | null = document.getElementById(name);
-	if (element && element instanceof HTMLInputElement)
-		return element.value;
-	return "";
+	if (element === null)
+		throw `No element "${name}"`;
+	return element;
+}
+
+// find an input element by ID
+export function findInputElement(name: string): HTMLInputElement {
+	const element: HTMLElement = findElement(name);
+	if (! (element instanceof HTMLInputElement))
+		throw `"${name}" is not an input element`;
+	return element;
 }
 
 // remove all the children from an element

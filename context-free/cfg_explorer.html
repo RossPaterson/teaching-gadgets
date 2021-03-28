@@ -2,6 +2,17 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <script type="text/javascript" src="javascript/cfg_explorer.js"></script>
+<script type="text/javascript">
+var grammar;
+var sentence;
+function setup() {
+	grammar = new CFG.GrammarExplorer(
+		[["lhs1", "rhs1"], ["lhs2", "rhs2"], ["lhs3", "rhs3"],
+		 ["lhs4", "rhs4"], ["lhs5", "rhs5"], ["lhs6", "rhs6"]],
+		"problems", "gallery");
+	sentence = new CFG.SentenceParser(grammar, "sentence", "gallery");
+}
+</script>
 <style>
 body {
 	font-family: sans-serif;
@@ -19,7 +30,8 @@ table.grammar {
 </style>
 <title>Explorer for context-free grammars</title>
 </head>
-<body>
+
+<body onload="setup()">
 <h1>Explorer for context-free grammars</h1>
 
 <p>
@@ -53,22 +65,6 @@ derivation trees and languages.
 <td><input type="text" id="lhs6" size="1"></td><td>&#x2192;</td>
 <td><input type="text" id="rhs6"></td>
 </tr>
-<tr>
-<td><input type="text" id="lhs7" size="1"></td><td>&#x2192;</td>
-<td><input type="text" id="rhs7"></td>
-</tr>
-<tr>
-<td><input type="text" id="lhs8" size="1"></td><td>&#x2192;</td>
-<td><input type="text" id="rhs8"></td>
-</tr>
-<tr>
-<td><input type="text" id="lhs9" size="1"></td><td>&#x2192;</td>
-<td><input type="text" id="rhs9"></td>
-</tr>
-<tr>
-<td><input type="text" id="lhs10" size="1"></td><td>&#x2192;</td>
-<td><input type="text" id="rhs10"></td>
-</tr>
 </table>
 
 <ul>
@@ -86,25 +82,10 @@ S &#x2192; aSb|c
 <div id="problems"></div>
 
 <div id="controls">
-<p><button onclick="CFG.allDerivations()">All possible derivations</button>
+<p><button onclick="grammar.allDerivations()">All possible derivations</button>
 <p><input type="text" id="sentence"/>
-<button onclick="CFG.deriveSentence()">Derivations of this string</button>
+<button onclick="sentence.deriveSentence()">Derivations of this string</button>
 </div>
-
-<script type="text/javascript">
-// also execute button actions if return is typed in larger fields
-CFG.addReturnAction('rhs1', CFG.allDerivations);
-CFG.addReturnAction('rhs2', CFG.allDerivations);
-CFG.addReturnAction('rhs3', CFG.allDerivations);
-CFG.addReturnAction('rhs4', CFG.allDerivations);
-CFG.addReturnAction('rhs5', CFG.allDerivations);
-CFG.addReturnAction('rhs6', CFG.allDerivations);
-CFG.addReturnAction('rhs7', CFG.allDerivations);
-CFG.addReturnAction('rhs8', CFG.allDerivations);
-CFG.addReturnAction('rhs9', CFG.allDerivations);
-CFG.addReturnAction('rhs10', CFG.allDerivations);
-CFG.addReturnAction('sentence', CFG.deriveSentence);
-</script>
 
 <div id="gallery"></div>
 
