@@ -17,20 +17,18 @@ const NT_LINE_COLOUR: string = "black";
 const NT_NULL_COLOUR: string = "#aaaaaa";
 const NT_NULL_SYMBOL: string = "ε";
 
-export abstract class ParseTree implements Equality<ParseTree> {
-	constructor() {}
+export interface ParseTree extends Equality<ParseTree> {
+	height(): number;
+	width(): number;
 
-	abstract height(): number;
-	abstract width(): number;
-
-	abstract getSentence(): string;
-	abstract draw(out: Array<SVGElement>, x: number, y: number, levels: number): number;
+	getSentence(): string;
+	draw(out: Array<SVGElement>, x: number, y: number, levels: number): number;
 
 	// deep equality test
-	abstract equals(o: ParseTree): boolean;
+	equals(o: ParseTree): boolean;
 }
 
-export class NonTerminalTree extends ParseTree {
+export class NonTerminalTree implements ParseTree {
 	// derived values
 	private readonly ht: number;
 	private readonly wd: number;
@@ -38,8 +36,6 @@ export class NonTerminalTree extends ParseTree {
 
 	constructor(private readonly sym: string,
 			private readonly children: List<ParseTree>) {
-		super();
-
 		let h: number = 1;
 		let w: number = 0;
 		for (const t of elements(children)) {
@@ -105,8 +101,8 @@ export class NonTerminalTree extends ParseTree {
 	}
 }
 
-export class TerminalTree extends ParseTree {
-	constructor(private readonly sym: string) { super(); }
+export class TerminalTree implements ParseTree {
+	constructor(private readonly sym: string) {}
 
 	height(): number { return 1; }
 	width(): number { return 1; }
