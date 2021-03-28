@@ -106,76 +106,72 @@ export type ParseResult = {
 	trees: Array<NonTerminalTree> // possible parses
 	};
 
-export class Earley {
-	constructor(private readonly grammar: Grammar) {}
+export function parse(grammar: Grammar, input: Array<string>): ParseResult {
+	let states: Array<Array<EarleyItem>> =
+		newArray(input.length+1);
 
-	parse(input: Array<string>): ParseResult {
-		let states: Array<Array<EarleyItem>> =
-			newArray(input.length+1);
-
-		let truncated: boolean = false;
-		for (let pos: number = input.length; pos >= 0; pos--) {
-			let queue = new Queue<EarleyItem>();
-			if (pos === input.length) {
-				// initial state (starting from end of string)
-				queue.add(endItem(START,
-					[this.grammar.getStart()], pos));
-			} else {
-				// scan a terminal symbol
-				const nextSym: string = input[pos];
-				if (this.grammar.isTerminal(nextSym)) {
-					const t: TerminalTree = new TerminalTree(nextSym);
-					for (const item of states[pos+1])
-						if (item.match(nextSym))
-							queue.add(item.advance(t));
-				}
+	let truncated: boolean = false;
+	for (let pos: number = input.length; pos >= 0; pos--) {
+		let queue = new Queue<EarleyItem>();
+		if (pos === input.length) {
+			// initial state (starting from end of string)
+			queue.add(endItem(START,
+				[grammar.getStart()], pos));
+		} else {
+			// scan a terminal symbol
+			const nextSym: string = input[pos];
+			if (grammar.isTerminal(nextSym)) {
+				const t = new TerminalTree(nextSym);
+				for (const item of states[pos+1])
+					if (item.match(nextSym))
+						queue.add(item.advance(t));
 			}
+		}
 
-			const state: Array<EarleyItem> = states[pos];
-			let empties: Array<NonTerminalTree> = [];
-			while (! queue.isEmpty()) {
-				// guard against unlimited expansion
-				if (state.length > EXPANSION_LIMIT) {
-					truncated = true;
-					break;
-				}
-				const item: EarleyItem = queue.remove();
-				if (! state.some((s) => s.equals(item))) {
-					state.push(item);
-					// expand the item
-					if (item.finished()) {
-						// complete a production
-						const t: NonTerminalTree = item.complete();
-						const nt: string = t.nonTerminal();
-						const end: number = item.start();
-						if (end === pos)
-							// null expansions need special treatment
-							empties.push(t);
-						for (const prev of states[end])
-							if (prev.match(nt))
-								queue.add(prev.advance(t));
-					} else {
-						// predict: expand a nonterminal
-						const nt: string = item.current();
-						if (this.grammar.isNonTerminal(nt)) {
-							for (const rhs of this.grammar.expansions(nt))
-								queue.add(endItem(nt, rhs, pos));
-							for (const t of empties)
-								if (t.nonTerminal() === nt)
-									queue.add(item.advance(t));
-						}
+		const state: Array<EarleyItem> = states[pos];
+		let empties: Array<NonTerminalTree> = [];
+		while (! queue.isEmpty()) {
+			// guard against unlimited expansion
+			if (state.length > EXPANSION_LIMIT) {
+				truncated = true;
+				break;
+			}
+			const item: EarleyItem = queue.remove();
+			if (! state.some((s) => s.equals(item))) {
+				state.push(item);
+				// expand the item
+				if (item.finished()) {
+					// complete a production
+					const t: NonTerminalTree = item.complete();
+					const nt: string = t.nonTerminal();
+					const end: number = item.start();
+					if (end === pos)
+						// null expansions need special treatment
+						empties.push(t);
+					for (const prev of states[end])
+						if (prev.match(nt))
+							queue.add(prev.advance(t));
+				} else {
+					// predict: expand a nonterminal
+					const nt: string = item.current();
+					if (grammar.isNonTerminal(nt)) {
+						for (const rhs of grammar.expansions(nt))
+							queue.add(endItem(nt, rhs, pos));
+						for (const t of empties)
+							if (t.nonTerminal() === nt)
+								queue.add(item.advance(t));
 					}
 				}
 			}
-			states[pos] = state;
 		}
-
-		let trees: Array<NonTerminalTree> = [];
-		for (const item of states[0])
-			if (item.finishedWith(START))
-				trees.push(item.completeTop());
-		return { complete: ! truncated, trees: trees };
+		states[pos] = state;
 	}
+
+	let trees: Array<NonTerminalTree> = [];
+	for (const item of states[0])
+		if (item.finishedWith(START))
+			trees.push(item.completeTop());
+	return { complete: ! truncated, trees: trees };
 }
 
 } // namespace CFG

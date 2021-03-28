@@ -93,8 +93,7 @@ export class SentenceParser {
 		this.grammarSrc.reportIssues(grammarIssues(grammar));
 
 		const sentence: string = this.sentence.value;
-		const parser: Earley = new Earley(grammar);
-		const result: ParseResult = parser.parse(symList(sentence));
+		const result: ParseResult = parse(grammar, symList(sentence));
 
 		const caption: string = (
 			! result.complete ? "Some of the derivations" :
