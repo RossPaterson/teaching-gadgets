@@ -23,7 +23,7 @@ export abstract class ParseTree implements Equality<ParseTree> {
 	abstract height(): number;
 	abstract width(): number;
 
-	abstract addSentence(s: string): string;
+	abstract getSentence(): string;
 	abstract draw(out: Array<SVGElement>, x: number, y: number, levels: number): number;
 
 	// deep equality test
@@ -49,7 +49,8 @@ export class NonTerminalTree extends ParseTree {
 		this.ht = h+1;
 		this.wd = Math.max(1, w);
 
-		this.sentence = this.addSentence("");
+		this.sentence = Array.from(elements(children),
+			(t) => t.getSentence()).join("");
 	}
 
 	height(): number { return this.ht; }
@@ -66,12 +67,6 @@ export class NonTerminalTree extends ParseTree {
 	}
 
 	getSentence(): string { return this.sentence; }
-
-	addSentence(s: string): string {
-		for (const t of elements(this.children))
-			s = t.addSentence(s);
-		return s;
-	}
 
 	draw(out: Array<SVGElement>, x: number, y: number, levels: number): number {
 		let rx: number;
@@ -124,11 +119,7 @@ export class TerminalTree extends ParseTree {
 		return o.sym === this.sym;
 	}
 
-	addSentence(s: string): string {
-		if (s.length === 0)
-			return this.sym;
-		return s + ' ' + this.sym;
-	}
+	getSentence(): string { return this.sym; }
 
 	draw(out: Array<SVGElement>, x: number, y: number, levels: number): number {
 		// at current position in tree
