@@ -23,10 +23,9 @@ export class GrammarExplorer {
 		this.rules = rules.map(ruleSources);
 		this.errors = findElement(errors);
 		this.gallery = findElement(gallery);
-		const src = this;
-		const action = function (e: KeyboardEvent): void {
+		const action = (e: KeyboardEvent) => {
 			if (e.keyCode == 13)
-				src.allDerivations();
+				this.allDerivations();
 		};
 		for (const rule of this.rules)
 			rule.rhs.onkeydown = action;
@@ -81,10 +80,9 @@ export class SentenceParser {
 		sentence: string, gallery: string) {
 		this.sentence = findInputElement(sentence);
 		this.gallery = findElement(gallery);
-		const src = this;
-		this.sentence.onkeydown = function (e: KeyboardEvent): void {
+		this.sentence.onkeydown = (e: KeyboardEvent) => {
 			if (e.keyCode == 13)
-				src.deriveSentence();
+				this.deriveSentence();
 		};
 	}
 

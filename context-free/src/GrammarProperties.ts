@@ -96,18 +96,15 @@ export class GrammarProperties {
 
 	private computeUnrealizable(): Set<string> {
 		let unrealizable = new Set<string>(this.grammar.nonTerminals());
-		const isRealizable = function (sym: string) {
-			return ! unrealizable.has(sym);
-		};
-		const allRealizable = function (rhs: Array<string>) {
-			 return rhs.every(isRealizable);
+		function realizableRhs(rhs: Array<string>) {
+			 return rhs.every((sym) => ! unrealizable.has(sym));
 		};
 
 		let changed: boolean = true;
 		while (changed) {
 			changed = false;
 			for (const nt of unrealizable)
-				if (this.grammar.expansions(nt).some(allRealizable)) {
+				if (this.grammar.expansions(nt).some(realizableRhs)) {
 					unrealizable.delete(nt);
 					changed = true;
 					break;
@@ -118,11 +115,8 @@ export class GrammarProperties {
 
 	private computeNullable(): Set<string> {
 		let nullable = new Set<string>();
-		const isNullable = function (sym: string) {
-			return nullable.has(sym);
-		};
-		const allNullable = function (rhs: Array<string>) {
-			 return rhs.every(isNullable);
+		function nullableRhs(rhs: Array<string>) {
+			 return rhs.every((sym) => nullable.has(sym));
 		};
 
 		let changed: boolean = true;
@@ -130,7 +124,7 @@ export class GrammarProperties {
 			changed = false;
 			for (const nt of this.grammar.nonTerminals())
 				if (! nullable.has(nt) &&
-				    this.grammar.expansions(nt).some(allNullable)) {
+				    this.grammar.expansions(nt).some(nullableRhs)) {
 					nullable.add(nt);
 					changed = true;
 					break;
