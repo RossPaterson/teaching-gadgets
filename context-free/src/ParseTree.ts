@@ -20,12 +20,14 @@ const NT_NULL_SYMBOL: string = "ε";
 export interface ParseTree extends Equality<ParseTree> {
 	height(): number;
 	width(): number;
-
 	getSentence(): string;
-	draw(out: Array<SVGElement>, x: number, y: number, levels: number): number;
 
-	// deep equality test
-	equals(o: ParseTree): boolean;
+	// Draw the tree and the sentence it produces
+	draw(out: Array<SVGElement>, // accumulating the drawing
+		x: number, // x-coordinate of the middle of the tree
+		y: number, // y-coordinate of the root of the tree
+		levels: number // height of the root of the tree
+		): number; // x-coordinate of the root of the tree
 }
 
 export class NonTerminalTree implements ParseTree {
@@ -51,8 +53,11 @@ export class NonTerminalTree implements ParseTree {
 
 	height(): number { return this.ht; }
 	width(): number { return this.wd; }
+	getSentence(): string { return this.sentence; }
+
 	nonTerminal(): string { return this.sym; }
 
+	// deep equality test
 	equals(o: ParseTree): boolean {
 		if (o === this)
 			return true;
@@ -62,40 +67,33 @@ export class NonTerminalTree implements ParseTree {
 			equalList(this.children, o.children);
 	}
 
-	getSentence(): string { return this.sentence; }
-
 	draw(out: Array<SVGElement>, x: number, y: number, levels: number): number {
-		let rx: number;
-		const ty: number = y + VSEP;
-		let trx: Array<number> = [];
-		let n: number = 0;
+		// draw the child subtrees
+		const ty: number = y + VSEP; // subtree root y-coordinate
+		let trx: Array<number> = []; // subtree root x-coordinates
 		let tx: number = x;
 		for (const t of elements(this.children)) {
 			trx.push(t.draw(out, tx, ty, levels-1));
-			n++;
 			tx = tx + t.width()*HSEP;
 		}
-		if (n === 0) {
-			rx = x;
-		} else {
+
+		// draw the root above the median of the subtree roots
+		const n: number = trx.length;
+		// x-coordinate of the root of the tree
+		const rx: number = n === 0 ? x :
 			// rx is median of subtree root x-coordinates
-			rx = (trx[Math.floor((n-1)/2)] + trx[Math.floor(n/2)])/2;
-		}
+			(trx[Math.floor((n-1)/2)] + trx[Math.floor(n/2)])/2;
 		out.push(text(rx, y, NT_SYMBOL_COLOUR, this.sym));
+
+		// draw lines from the root to the children
+		const y1: number = y+BOTTOM;
+		const y2: number = ty-TOP;
 		if (n === 0) {
 			out.push(text(x, ty, NT_NULL_COLOUR, NT_NULL_SYMBOL));
-			out.push(lines(NT_NULL_COLOUR,
-				[line(x, y+BOTTOM, x, ty-TOP)]));
+			out.push(lines(NT_NULL_COLOUR, [line(x, y1, x, y2)]));
 		} else {
-			let ls: Array<SVGElement> = [];
-			tx = x;
-			let i: number = 0;
-			for (const t of elements(this.children)) {
-				ls.push(line(rx, y+BOTTOM, trx[i], ty-TOP));
-				i++;
-				tx = tx + t.width()*HSEP;
-			}
-			out.push(lines(NT_LINE_COLOUR, ls));
+			out.push(lines(NT_LINE_COLOUR,
+				trx.map((cx) => line(rx, y1, cx, y2))));
 		}
 		return rx;
 	}
@@ -106,6 +104,7 @@ export class TerminalTree implements ParseTree {
 
 	height(): number { return 1; }
 	width(): number { return 1; }
+	getSentence(): string { return this.sym; }
 
 	equals(o: ParseTree): boolean {
 		if (o === this)
@@ -115,16 +114,15 @@ export class TerminalTree implements ParseTree {
 		return o.sym === this.sym;
 	}
 
-	getSentence(): string { return this.sym; }
-
 	draw(out: Array<SVGElement>, x: number, y: number, levels: number): number {
-		// at current position in tree
+		// draw terminal at current position in the tree
 		out.push(text(x, y, TERM_SYMBOL_COLOUR, this.sym));
-		// directly below that and outside the box
+
+		// draw terminal directly below that and outside the box
 		const ly: number = y + levels*VSEP - 10;
 		out.push(text(x, ly, TERM_SYMBOL_COLOUR, this.sym));
 
-		// grey line connecting them
+		// draw grey line connecting them
 		out.push(lines(TERM_LINE_COLOUR,
 			[line(x, y + BOTTOM, x, ly - TOP)]));
 		return x;
@@ -146,20 +144,26 @@ export function compareNTs(a: NonTerminalTree, b: NonTerminalTree): number {
 }
 
 export function drawTree(t: ParseTree): SVGElement {
-	let es: Array<SVGElement> = []
+	const box_width: number = t.width()*HSEP;
+	const box_height: number = t.height()*VSEP;
+	let es: Array<SVGElement> = [];
+	// background of parse tree
 	es.push(svgElement("rect", [
-		numAttr("width", t.width()*HSEP),
-		numAttr("height", t.height()*VSEP),
+		numAttr("width", box_width),
+		numAttr("height", box_height),
 		attr("fill", "#fff7db")], []));
+	// background of generated sentence
 	es.push(svgElement("rect", [
-		numAttr("y", t.height()*VSEP),
-		numAttr("width", t.width()*HSEP),
+		numAttr("y", box_height),
+		numAttr("width", box_width),
 		numAttr("height", STRIP_HEIGHT),
 		attr("fill", "#f0e6bc")], []));
+	// overlay with the tree and sentence
 	t.draw(es, HSEP/2, 30, t.height());
+
 	return svgElement("svg", [
-		numAttr("width", t.width()*HSEP + H_PADDING),
-		numAttr("height", t.height()*VSEP + STRIP_HEIGHT + V_PADDING),
+		numAttr("width", box_width + H_PADDING),
+		numAttr("height", box_height + STRIP_HEIGHT + V_PADDING),
 		attr("xmlns", "http://www.w3.org/2000/svg"),
 		attr("version", "1.1"),
 		attr("font-family", "sans-serif"),
