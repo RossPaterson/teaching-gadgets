@@ -28,11 +28,12 @@ export function catLangs(l1: Language, l2: Language): Language {
 }
 
 export function starLang(l: Language): Language {
-	function* l_iter() {
-		yield [""];
-		yield* catLangs(Iter.drop(1, l), l_star);
-	}
-	const l_star: Language = { [Symbol.iterator]: l_iter };
+	const l_star: Language = {
+		[Symbol.iterator]: function* l_iter() {
+			yield [""];
+			yield* catLangs(Iter.drop(1, l), l_star);
+		}
+	};
 	return l_star;
 }
 
