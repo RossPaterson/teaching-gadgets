@@ -76,7 +76,7 @@ function languageString(re_text: string): string {
 
 // The regular language denoted by a regular expression
 const language: (e: RegExpr) => Language = foldRegExpr({
-	emptyExpr: emptyString,
+	emptyExpr: () => emptyString,
 	singleExpr: singleLetter,
 	orExpr: unionLangs,
 	andExpr: catLangs,
