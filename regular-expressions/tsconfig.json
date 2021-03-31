@@ -1,15 +1,11 @@
 {
     "compilerOptions": {
-	"target": "es6",
+        "target": "es6",
         "lib": ["dom", "es2015"],
-        "alwaysStrict": true,
-        "strictBindCallApply": true,
-        "strictFunctionTypes": true,
-        "noImplicitAny": true,
+        "strict": true,
         "noFallthroughCasesInSwitch": true,
-        "noUnusedLocals": true,
         "noImplicitReturns": true,
-        "noImplicitThis": true,
+        "noUnusedLocals": true,
         "removeComments": true,
         "outFile": "javascript/regex_language.js",
         "noEmitOnError": true
