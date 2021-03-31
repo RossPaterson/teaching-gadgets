@@ -71,7 +71,7 @@ export function longZipWith<A>(f: (x: A, y: A) => A):
 	};
 }
 
-// nth iterator consists of all f(xi, yj) such that i+j = n+1
+// nth iterable consists of all f(xi, yj) such that i+j = n+1
 export function diagonalsWith<A, B, C>(f: (x: A, y: B) => C):
 		(xs: Iterable<A>, ys: Iterable<B>) => Iterable<Iterable<C>> {
 	return function (xs: Iterable<A>, ys: Iterable<B>): Iterable<Iterable<C>> {
@@ -105,6 +105,38 @@ export function diagonalsWith<A, B, C>(f: (x: A, y: B) => C):
 			}
 		};
 	};
+}
+
+export function cons<A>(x: A, xs: Iterable<A>): Iterable<A> {
+	return {
+		[Symbol.iterator]: function*() {
+			yield x;
+			yield* xs;
+		}
+	};
+}
+
+// Construct a recursively defined iterable that returns init when first
+// called, followed by the result of f applied to the whole iterable.
+// This is done by feeding back the outputs of the generated iterator
+// to the function generating it, and only works if f is synchronous,
+// i.e. extracting each value from f(xs) demands only one more value
+// from xs.
+export function recursive<A>(init: A,
+		f: (l: Iterable<A>) => Iterable<A>): Iterable<A> {
+	let current: A = init; // last value returned
+	function save_current(ss: A): A {
+		current = ss;
+		return ss;
+	}
+	// iterator yielding previous outputs of the returned iterator
+	const prev: Iterable<A> = {
+		[Symbol.iterator]: function*() { 
+			for (;;)
+				yield current;
+		}
+	};
+	return map(save_current)(cons(init, f(prev)));
 }
 
 } // namespace IterTools

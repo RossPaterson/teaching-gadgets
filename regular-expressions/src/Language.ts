@@ -28,13 +28,8 @@ export function catLangs(l1: Language, l2: Language): Language {
 }
 
 export function starLang(l: Language): Language {
-	const l_star: Language = {
-		[Symbol.iterator]: function* l_iter() {
-			yield [""];
-			yield* catLangs(Iter.drop(1, l), l_star);
-		}
-	};
-	return l_star;
+	return Iter.recursive([""],
+		(l_star: Language) => catLangs(Iter.drop(1, l), l_star));
 }
 
 // Operations on string sets, represented as ordered arrays of strings
