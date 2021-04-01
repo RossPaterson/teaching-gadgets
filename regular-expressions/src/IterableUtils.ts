@@ -91,11 +91,8 @@ export function diagonalsWith<A, B, C>(f: (x: A, y: B) => C):
 				const hi = Math.min(n, x_arr.length - 1);
 				if (lo > hi)
 					return;
-				function* level(): Iterator<C> {
-					for (let i = lo; i <= hi; i++)
-						yield f(x_arr[i], y_arr[n-i]);
-				}
-				yield iterable(level);
+				yield map((i: number) => f(x_arr[i], y_arr[n-i]))
+					(range(lo, hi));
 				if (! rx.done)
 					rx = px.next();
 				if (! ry.done)
@@ -144,6 +141,18 @@ export function cons<A>(x: A, xs: Iterable<A>): Iterable<A> {
 	return iterable(function*() {
 		yield x;
 		yield* xs;
+	});
+}
+
+export function range(start: number, finish: number, step: number = 1):
+		Iterable<number> {
+	return iterable(function*() {
+		if (step > 0)
+			for (let i = start; i <= finish; i += step)
+				yield i;
+		else if (step < 0)
+			for (let i = start; i >= finish; i += step)
+				yield i;
 	});
 }
 
