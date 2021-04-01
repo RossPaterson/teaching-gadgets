@@ -1,11 +1,13 @@
 namespace Regex {
 
+// algebraic datatype of regular expressions
+
 export interface RegExpr {
 	// eliminator
 	cases<R>(alts: RegExprCases<RegExpr, R>): R;
 }
 
-type RegExprCases<A, R> = {
+export type RegExprCases<A, R> = {
 	emptyExpr: () => R,
 	singleExpr: (c: string) => R,
 	orExpr: (e1: A, e2: A) => R,
