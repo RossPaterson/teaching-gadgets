@@ -127,39 +127,36 @@ enum LinkType {
 	Cons // a retrieved value and a link to more values
 	};
 
-class SharingIterator<A> implements Iterator<A> {
-	constructor(private readonly xp: Iterator<A>,
-		private cursor: Link<A>) {}
-
-	next(value?: any): IteratorResult<A> {
-		if (this.cursor.linkType == LinkType.Hole) {
-			const rx: IteratorResult<A> = this.xp.next();
+// An iterator that takes values from the cursor if possible.  If not,
+// it takes a value from px, adding it at the cursor for the benefit of
+// other instances sharing this list and iterator.
+function* sharingIterator<A>(cursor: Link<A>, xp: Iterator<A>): Iterator<A> {
+	for (;;) {
+		if (cursor.linkType === LinkType.Hole) {
+			const rx: IteratorResult<A> = xp.next();
 			if (rx.done)
-				this.cursor.linkType = LinkType.End;
+				cursor.linkType = LinkType.End;
 			else {
-				this.cursor.linkType = LinkType.Cons;
-				this.cursor.value = rx.value;
-				this.cursor.next = { linkType: LinkType.Hole };
+				cursor.linkType = LinkType.Cons;
+				cursor.value = rx.value;
+				cursor.next = { linkType: LinkType.Hole };
 			}
 		}
-		if (this.cursor.linkType == LinkType.End)
-			return { done: true, value: undefined };
-		const result: A = this.cursor.value!;
-		this.cursor = this.cursor.next!;
-		return {done: false, value: result };
+		if (cursor.linkType === LinkType.End)
+			return;
+		const result: A = cursor.value!;
+		cursor = cursor.next!;
+		yield result;
 	}
 }
 
-// An iterable whose iterators each produce the sequence of values of the
-// argument iterator, which is consumed on demand.
+// An iterable whose iterators each produce the sequence of values of
+// the argument iterator, which is consumed on demand.
 export function share<A>(xp: Iterator<A>): Iterable<A> {
 	// list of values retrieved from xp, shared between the generated
 	// iterators
 	const values: Link<A> = { linkType: LinkType.Hole };
-	function sharingIterator(): Iterator<A> {
-		return new SharingIterator<A>(xp, values);
-	}
-	return { [Symbol.iterator]: sharingIterator };
+	return { [Symbol.iterator]: () => sharingIterator(values, xp) };
 }
 
 // An iterable whose iterators each produce the sequence of values of the
