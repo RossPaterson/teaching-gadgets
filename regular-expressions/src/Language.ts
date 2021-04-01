@@ -28,8 +28,8 @@ export function catLangs(l1: Language, l2: Language): Language {
 }
 
 export function starLang(l: Language): Language {
-	return Iter.recursive([""],
-		(l_star: Language) => catLangs(Iter.drop(1, l), l_star));
+	return Iter.fixpoint((l_star: Language) =>
+		Iter.cons([""], catLangs(Iter.drop(1, l), l_star)));
 }
 
 // Operations on string sets, represented as ordered arrays of strings
