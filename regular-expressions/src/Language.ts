@@ -46,27 +46,11 @@ const unions: (ss: Iterable<StringSet>) => StringSet =
 
 // union of two sets of strings
 function union(xs: StringSet, ys: StringSet): StringSet {
-	// shortcuts for special cases
-	if (xs.length === 0)
-		return ys;
-	if (ys.length === 0)
-		return xs;
+	return Array.from(Iter.mergeWith(compareString, xs, ys));
+}
 
-	let i: number = 0;
-	let j: number = 0;
-	let result: StringSet = [];
-	while (i < xs.length || j < ys.length) {
-		if (j === ys.length || xs[i] < ys[j]) {
-			result.push(xs[i]);
-			i++;
-		} else {
-			result.push(ys[j]);
-			if (i < xs.length && xs[i] === ys[j])
-				i++;
-			j++;
-		}
-	}
-	return result;
+function compareString(x: string, y: string): number {
+	return x < y ? -1 : x === y ? 0 : 1;
 }
 
 }
