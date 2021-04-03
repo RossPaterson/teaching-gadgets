@@ -1,5 +1,8 @@
 // list-like functions on iterables
 
+// The iterables returned by these functions are reusable if the iterable
+// arguments are.
+
 namespace IterableUtils {
 
 function iterable<A>(maker: () => Iterator<A>): Iterable<A> {
