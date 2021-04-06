@@ -3,10 +3,11 @@ namespace Regex {
 // algebraic datatype of regular expressions
 
 export interface RegExpr {
-	// eliminator
+	// eliminator: (F RegExpr => R) => R ~= F RegExpr
 	cases<R>(alts: RegExprCases<RegExpr, R>): R;
 }
 
+// visitor for regexps = F A => R
 export type RegExprCases<A, R> = {
 	emptyExpr: () => R,
 	singleExpr: (c: string) => R,
@@ -15,7 +16,7 @@ export type RegExprCases<A, R> = {
 	starExpr: (e: A) => R
 	}
 
-// constructors
+// constructors: RegExprCases<RegExpr, RegExpr> = F RegExpr => RegExpr
 
 export function emptyExpr(): RegExpr { return new EmptyExpr(); }
 export function singleExpr(c: string): RegExpr { return new SingleExpr(c); }
@@ -27,7 +28,7 @@ export function andExpr(e1: RegExpr, e2: RegExpr): RegExpr {
 }
 export function starExpr(e: RegExpr): RegExpr { return new StarExpr(e); }
 
-// primitive recursion
+// primitive recursion: (F A => A) => RegExpr => A
 export function foldRegExpr<A>(alts: RegExprCases<A, A>): (re: RegExpr) => A {
 	return function fold(re: RegExpr): A {
 		return re.cases({
