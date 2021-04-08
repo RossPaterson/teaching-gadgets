@@ -17,7 +17,7 @@ const NT_LINE_COLOUR: string = "black";
 const NT_NULL_COLOUR: string = "#aaaaaa";
 const NT_NULL_SYMBOL: string = "ε";
 
-export interface ParseTree extends Equality<ParseTree> {
+export interface ParseTree {
 	height(): number;
 	width(): number;
 	getSentence(): string;
@@ -36,8 +36,8 @@ export class NonTerminalTree implements ParseTree {
 	private readonly wd: number;
 	private readonly sentence: string;
 
-	constructor(private readonly sym: string,
-			private readonly children: List<ParseTree>) {
+	constructor(public readonly sym: string,
+			public readonly children: List<ParseTree>) {
 		let h: number = 1;
 		let w: number = 0;
 		for (const t of elements(children)) {
@@ -56,16 +56,6 @@ export class NonTerminalTree implements ParseTree {
 	getSentence(): string { return this.sentence; }
 
 	nonTerminal(): string { return this.sym; }
-
-	// deep equality test
-	equals(o: ParseTree): boolean {
-		if (o === this)
-			return true;
-		if (! (o instanceof NonTerminalTree))
-			return false;
-		return this.sym == o.sym &&
-			equalList(this.children, o.children);
-	}
 
 	draw(out: Array<SVGElement>, x: number, y: number, levels: number): number {
 		// draw the child subtrees
@@ -100,19 +90,11 @@ export class NonTerminalTree implements ParseTree {
 }
 
 export class TerminalTree implements ParseTree {
-	constructor(private readonly sym: string) {}
+	constructor(public readonly sym: string) {}
 
 	height(): number { return 1; }
 	width(): number { return 1; }
 	getSentence(): string { return this.sym; }
-
-	equals(o: ParseTree): boolean {
-		if (o === this)
-			return true;
-		if (! (o instanceof TerminalTree))
-			return false;
-		return o.sym === this.sym;
-	}
 
 	draw(out: Array<SVGElement>, x: number, y: number, levels: number): number {
 		// draw terminal at current position in the tree
@@ -127,6 +109,17 @@ export class TerminalTree implements ParseTree {
 			[line(x, y + BOTTOM, x, ly - TOP)]));
 		return x;
 	}
+}
+
+export function equalTree(t1: ParseTree, t2: ParseTree): boolean {
+	if (t1 === t2)
+		return true;
+	if (t1 instanceof TerminalTree && t2 instanceof TerminalTree)
+		return t1.sym === t2.sym;
+	if (t1 instanceof NonTerminalTree && t2 instanceof NonTerminalTree)
+		return t1.sym === t2.sym &&
+			equalList(equalTree, t1.children, t2.children);
+	return false;
 }
 
 // compare trees first by length of generated sentence, then generated

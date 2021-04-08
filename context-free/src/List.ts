@@ -13,16 +13,14 @@ export function cons<T>(x: T): (xs: List<T>) => List<T> {
 	return (xs: List<T>) => new Cons<T>(x, xs);
 }
 
-export interface Equality<T> { equals(o: T): boolean; }
-
 // elementwise equality test for lists
-export function equalList<T extends Equality<T>>(xs: List<T>, ys: List<T>): boolean {
+export function equalList<T>(eq: (x: T, y: T) => boolean, xs: List<T>, ys: List<T>): boolean {
 	while (xs !== null) {
 		if (ys === null)
 			return false;
 		if (xs === ys)
 			return true;
-		if (! xs.head.equals(ys.head))
+		if (! eq(xs.head, ys.head))
 			return false;
 		xs = xs.tail;
 		ys = ys.tail;

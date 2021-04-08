@@ -50,7 +50,7 @@ class EarleyItem {
 		return o === this ||
 			this.finish === o.finish && this.pos === o.pos &&
 			this.nt === o.nt && equalArray(this.rhs, o.rhs) &&
-			equalList(this.parsed, o.parsed);
+			equalList(equalTree, this.parsed, o.parsed);
 	}
 
 	// Have we matched the whole of the rhs?
