@@ -29,8 +29,7 @@ export function regexAndLanguage(source: string, target: string): void {
 
 	src_element.onkeydown = function (e: KeyboardEvent) {
 		if (e.keyCode == 13)
-			tgt_element.innerHTML =
-				languageString(src_element.value);
+			setRegexLanguage(tgt_element, src_element.value);
 	};
 }
 
@@ -42,21 +41,39 @@ export function regexAndLanguage(source: string, target: string): void {
 // <input type="text" size="15" value="" onchange="regexLanguage('target-id', this.value);"/>
 // <p id="target-id"></p>
 export function regexLanguage(element_id: string, re_text: string): void {
-	(document.getElementById(element_id) as HTMLElement).innerHTML =
-		languageString(re_text);
+	setRegexLanguage(document.getElementById(element_id) as HTMLElement,
+		re_text);
+}
+
+function setRegexLanguage(element: HTMLElement, re_text: string): void {
+	const result = languageString(re_text);
+	if (result.resultTag === "Success")
+		element.textContent = `{ ${result.language.join(", ")} }`;
+	else {
+		while (element.lastChild)
+			element.removeChild(element.lastChild);
+		const message: HTMLElement = document.createElement("em");
+		message.setAttribute("class", "error");
+		message.textContent = "Malformed expression: " + result.message;
+		element.appendChild(message);
+	}
 }
 
 // approximate limit on the length of the language string
 const LANG_LIMIT: number = 150;
 
+type Result =
+	{ resultTag: "Success", language: Array<string> } |
+	{ resultTag: "Failure", message: string }
+
 // String representing the set of strings denoted by the regular
 // expression in re_text, truncated to appromimately LANG_LIMIT characters
-function languageString(re_text: string): string {
+function languageString(re_text: string): Result {
 	let e: RegExpr;
 	try {
 		e = parseRegExpr(re_text);
 	} catch (err) {
-		return `<em class="error">Malformed expression: ${err}</em>`;
+		return { resultTag: "Failure", message: err };
 	}
 
 	let n: number = LANG_LIMIT;
@@ -71,7 +88,7 @@ function languageString(re_text: string): string {
 	}
 	if (ss[0] === "")
 		ss[0] = "ε";
-	return `{ ${ss.join(", ")} }`;
+	return { resultTag: "Success", language: ss };
 }
 
 // The regular language denoted by a regular expression
