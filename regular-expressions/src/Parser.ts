@@ -1,14 +1,19 @@
 /// <reference path="CharScanner.ts" />
 /// <reference path="RegExpr.ts" />
+/// <reference path="Result.ts" />
 namespace Regex {
 
 // whole string as a regular expression
-export function parseRegExpr(s: string): RegExpr {
+export function parseRegExpr(s: string): Result<RegExpr, string> {
 	let scanner = new CharScanner(s);
-	const e: RegExpr = expr(scanner);
-	if (scanner.get() !== '')
-		scanner.fail(`unexpected '${scanner.get()}'`);
-	return e;
+	try {
+		const e: RegExpr = expr(scanner);
+		if (scanner.get() !== '')
+			scanner.fail(`unexpected '${scanner.get()}'`);
+		return success(e);
+	} catch (err) {
+		return failure(err);
+	}
 }
 
 // e = t ('|' t)*

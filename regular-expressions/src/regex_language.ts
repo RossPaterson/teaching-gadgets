@@ -1,6 +1,7 @@
 /// <reference path="Language.ts" />
 /// <reference path="Parser.ts" />
 /// <reference path="RegExpr.ts" />
+/// <reference path="Result.ts" />
 namespace Regex {
 
 // Mapping a regular expression to a summary of the corresponding language.
@@ -46,36 +47,28 @@ export function regexLanguage(element_id: string, re_text: string): void {
 }
 
 function setRegexLanguage(element: HTMLElement, re_text: string): void {
-	const result = languageString(re_text);
-	if (result.resultTag === "Success")
-		element.textContent = `{ ${result.language.join(", ")} }`;
-	else {
-		while (element.lastChild)
-			element.removeChild(element.lastChild);
-		const message: HTMLElement = document.createElement("em");
-		message.setAttribute("class", "error");
-		message.textContent = "Malformed expression: " + result.message;
-		element.appendChild(message);
-	}
+	parseRegExpr(re_text).cases({
+		success: function (e: RegExpr): void {
+			element.textContent = languageString(e);
+		},
+		failure: function (msg: string): void {
+			while (element.lastChild)
+				element.removeChild(element.lastChild);
+			const message: HTMLElement =
+				document.createElement("em");
+			message.setAttribute("class", "error");
+			message.textContent = "Malformed expression: " + msg;
+			element.appendChild(message);
+		}
+	});
 }
 
 // approximate limit on the length of the language string
 const LANG_LIMIT: number = 150;
 
-type Result =
-	{ resultTag: "Success", language: Array<string> } |
-	{ resultTag: "Failure", message: string }
-
 // String representing the set of strings denoted by the regular
 // expression in re_text, truncated to appromimately LANG_LIMIT characters
-function languageString(re_text: string): Result {
-	let e: RegExpr;
-	try {
-		e = parseRegExpr(re_text);
-	} catch (err) {
-		return { resultTag: "Failure", message: err };
-	}
-
+function languageString(e: RegExpr): string {
 	let n: number = LANG_LIMIT;
 	let ss: Array<string> = [];
 	for (const s of strings(language(e))) {
@@ -88,7 +81,7 @@ function languageString(re_text: string): Result {
 	}
 	if (ss[0] === "")
 		ss[0] = "ε";
-	return { resultTag: "Success", language: ss };
+	return "{ " + ss.join(", ") + " }";
 }
 
 // The regular language denoted by a regular expression
