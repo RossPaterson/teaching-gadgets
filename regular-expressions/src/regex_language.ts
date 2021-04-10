@@ -18,15 +18,10 @@ namespace Regex {
 // <p id="language-id"></p>
 // <script>regexAndLanguage("regex-id", "language-id");</script>
 export function regexAndLanguage(source: string, target: string): void {
-        const src_element: HTMLElement | null = document.getElementById(source);
-        if (src_element === null)
-		throw (`No "${source}" element`);
+	const src_element: HTMLElement = findElement(source);
 	if (! (src_element instanceof HTMLInputElement))
 		throw (`"${source}" is not an input element`)
-
-        const tgt_element: HTMLElement | null = document.getElementById(target);
-        if (tgt_element === null)
-		throw (`No "${target}" element`);
+	const tgt_element: HTMLElement = findElement(target);
 
 	src_element.onkeydown = function (e: KeyboardEvent) {
 		if (e.keyCode == 13)
@@ -42,32 +37,55 @@ export function regexAndLanguage(source: string, target: string): void {
 // <input type="text" size="15" value="" onchange="regexLanguage('target-id', this.value);"/>
 // <p id="target-id"></p>
 export function regexLanguage(element_id: string, re_text: string): void {
-	setRegexLanguage(document.getElementById(element_id) as HTMLElement,
-		re_text);
+	setRegexLanguage(findElement(element_id), re_text);
 }
 
+// Set content of the element to the language denoted by the regular
+// expression text.
 function setRegexLanguage(element: HTMLElement, re_text: string): void {
 	parseRegExpr(re_text).cases({
 		success: function (e: RegExpr): void {
 			element.textContent = languageString(e);
 		},
 		failure: function (msg: string): void {
-			while (element.lastChild)
-				element.removeChild(element.lastChild);
-			const message: HTMLElement =
-				document.createElement("em");
-			message.setAttribute("class", "error");
-			message.textContent = "Malformed expression: " + msg;
-			element.appendChild(message);
+			removeChildren(element);
+			element.appendChild(
+				errorMessage("Malformed expression: " + msg));
 		}
 	});
 }
+
+// DOM utilities
+
+// get a named DOM element that is expected to exist
+function findElement(id: string): HTMLElement {
+	const element: HTMLElement | null = document.getElementById(id);
+	if (element === null)
+		throw ("No element " + id);
+	return element;
+}
+
+// remove all the children from an element
+export function removeChildren(element: HTMLElement): void {
+	while (element.lastChild)
+		element.removeChild(element.lastChild);
+}
+
+// mark a string as an error
+function errorMessage(msg: string): HTMLElement {
+	const element: HTMLElement = document.createElement("em");
+	element.setAttribute("class", "error");
+	element.textContent = msg;
+	return element;
+}
+
+// Presentation of a regular language
 
 // approximate limit on the length of the language string
 const LANG_LIMIT: number = 150;
 
 // String representing the set of strings denoted by the regular
-// expression in re_text, truncated to appromimately LANG_LIMIT characters
+// expression, truncated to approximately LANG_LIMIT characters
 function languageString(e: RegExpr): string {
 	let n: number = LANG_LIMIT;
 	let ss: Array<string> = [];
