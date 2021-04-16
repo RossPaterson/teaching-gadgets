@@ -1,5 +1,8 @@
 namespace Regex {
 
+// simulating an algebraic data type
+// data Result<V, E> = success(v: V) | failure(e: E)
+
 // either a successful result value or an error
 export interface Result<V, E> {
 	cases<R>(alts: ResultCases<V, E, R>): R;

@@ -1,6 +1,12 @@
 namespace Regex {
 
 // algebraic datatype of regular expressions
+// data Regexpr
+//	= emptyExpr()
+//	| singleExpr(c: string)
+//	| orExpr(e1: RegExpr, e2: RegExpr)
+//	| andExpr(e1: RegExpr, e2: RegExpr)
+//	| starExpr(e: RegExpr)
 
 export interface RegExpr {
 	// eliminator: (F RegExpr => R) => R ~= F RegExpr

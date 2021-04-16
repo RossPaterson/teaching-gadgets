@@ -11,10 +11,14 @@ namespace CFG {
 // limit on the total size of trees when expanding the grammar
 const LIMIT: number = 10000;
 
+// pair of DOM elements holding a production
 type ProductionSource = { lhs: HTMLInputElement, rhs: HTMLInputElement }
 
+// collection of DOM elements holding a grammar and locations for output
 export class GrammarExplorer {
+	// locations for input of grammar
 	private rules: Array<ProductionSource>;
+	// locations for output
 	private errors: HTMLElement;
 	private gallery: HTMLElement;
 
@@ -31,8 +35,9 @@ export class GrammarExplorer {
 			rule.rhs.onkeydown = action;
 	}
 
+	// fetch the grammar from the input elements
 	getGrammar(): Grammar {
-		let grammar: Grammar = new Grammar();
+		let grammar = new Grammar();
 		for (const rule of this.rules) {
 			const lhs: string = rule.lhs.value;
 			const rhs: string = rule.rhs.value;
@@ -43,6 +48,7 @@ export class GrammarExplorer {
 		return grammar;
 	}
 
+	// place any grammar issues in the error element
 	reportIssues(issues: Array<string>): void {
 		removeChildren(this.errors);
 		if (issues.length > 0) {
@@ -51,12 +57,23 @@ export class GrammarExplorer {
 		}
 	}
 
+	// put the caption and trees in the gallery
+	setTreeGallery(caption: string, trees: Array<NonTerminalTree>) {
+		const target = this.gallery;
+		removeChildren(target);
+		target.appendChild(simpleElement("h2", caption));
+		trees.sort(compareNTs);
+		for (const tree of trees)
+			target.appendChild(drawTree(tree));
+	}
+
+	// show all derivations in the gallery
 	allDerivations(): void {
 		const grammar: Grammar = this.getGrammar();
 		this.reportIssues(grammarIssues(grammar));
 
-		const maxDepth: number = grammar.nonTerminals().length + 9;
-		const lgges: Expansion = new Expansion(grammar, LIMIT);
+		const maxDepth = grammar.nonTerminals().length + 9;
+		const lgges = new Expansion(grammar, LIMIT);
 		lgges.expandToDepth(maxDepth);
 		const trees: Array<NonTerminalTree> =
 			lgges.derivations(grammar.getStart());
@@ -64,7 +81,7 @@ export class GrammarExplorer {
 		const caption: string =
 			lgges.complete() ? "All derivation trees" :
 			"Derivation trees of depth at most " + lgges.depth();
-		setTreeGallery(caption, trees, this.gallery);
+		this.setTreeGallery(caption, trees);
 	}
 }
 
@@ -74,18 +91,16 @@ function ruleSources([lhs, rhs]: [string, string]): ProductionSource {
 
 export class SentenceParser {
 	private sentence: HTMLInputElement;
-	private gallery: HTMLElement;
 
-	constructor(private grammarSrc: GrammarExplorer,
-		sentence: string, gallery: string) {
+	constructor(private grammarSrc: GrammarExplorer, sentence: string) {
 		this.sentence = findInputElement(sentence);
-		this.gallery = findElement(gallery);
 		this.sentence.onkeydown = (e: KeyboardEvent) => {
 			if (e.keyCode == 13)
 				this.deriveSentence();
 		};
 	}
 
+	// show derivations of the sentence in the gallery
 	deriveSentence(): void {
 		const grammar: Grammar = this.grammarSrc.getGrammar();
 		this.grammarSrc.reportIssues(grammarIssues(grammar));
@@ -98,7 +113,7 @@ export class SentenceParser {
 			result.trees.length == 0 ? "There are no derivations" :
 			result.trees.length == 1 ? "Derivation tree" :
 				"Derivation trees") + " for '" + sentence + "'";
-		setTreeGallery(caption, result.trees, this.gallery);
+		this.grammarSrc.setTreeGallery(caption, result.trees);
 	}
 }
 
@@ -112,7 +127,7 @@ function symList(s: string): Array<string> {
 }
 
 function grammarIssues(g: Grammar): Array<string> {
-	const properties: GrammarProperties = new GrammarProperties(g);
+	const properties = new GrammarProperties(g);
 	let issues: Array<string> = [];
         const unreachable: Set<string> = properties.getUnreachable();
         const unrealizable: Set<string> = properties.getUnrealizable();
@@ -137,14 +152,6 @@ function describeNTs(nts: Set<string>, adjective: string): string {
 		Array.from(nts).join(", ") +
 		(plural ? " are " : " is ") +
 		adjective + ".";
-}
-
-function setTreeGallery(caption: string, trees: Array<NonTerminalTree>, target: HTMLElement): void {
-	removeChildren(target);
-	target.appendChild(simpleElement("h2", caption));
-	trees.sort(compareNTs);
-	for (const tree of trees)
-		target.appendChild(drawTree(tree));
 }
 
 } // namespace CFG
