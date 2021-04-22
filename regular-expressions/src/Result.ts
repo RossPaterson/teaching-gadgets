@@ -1,5 +1,3 @@
-namespace Regex {
-
 // simulating an algebraic data type
 // data Result<V, E> = success(v: V) | failure(e: E)
 
@@ -32,6 +30,4 @@ class Failure<V, E> implements Result<V, E> {
 	cases<R>(alts: ResultCases<V, E, R>) {
 		return alts.failure(this.e);
 	}
-}
-
 }

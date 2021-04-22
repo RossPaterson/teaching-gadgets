@@ -1,8 +1,8 @@
-/// <reference path="Grammar.ts" />
-/// <reference path="List.ts" />
-/// <reference path="ParseTree.ts" />
-
-namespace CFG {
+import type { Grammar } from "./Grammar";
+import type { List } from "./List";
+import { cons } from "./List";
+import type { ParseTree } from "./ParseTree";
+import { NonTerminalTree, TerminalTree } from "./ParseTree";
 
 export class Expansion {
 	// total size (width*height) of derivation trees
@@ -93,5 +93,3 @@ export class Expansion {
 
 	complete(): boolean { return this.finished; }
 }
-
-} // namespace CFG

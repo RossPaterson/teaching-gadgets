@@ -1,5 +1,3 @@
-namespace CFG {
-
 // find an element by ID
 export function findElement(name: string): HTMLElement {
 	const element: HTMLElement | null = document.getElementById(name);
@@ -41,6 +39,4 @@ export function compoundElement(name: string, children: Array<HTMLElement>): HTM
 	for (const child of children)
 		element.appendChild(child);
 	return element;
-}
-
 }

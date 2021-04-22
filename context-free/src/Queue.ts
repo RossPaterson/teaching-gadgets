@@ -1,5 +1,3 @@
-namespace CFG {
-
 // Simple queues
 
 class QElement<T> {
@@ -39,5 +37,3 @@ export class Queue<T> {
 		throw "empty queue";
 	}
 }
-
-} // namespace CFG

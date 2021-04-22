@@ -1,5 +1,3 @@
-namespace Regex {
-
 // Scanner for recursive descent parser for regular expressions
 
 export class CharScanner {
@@ -34,6 +32,4 @@ export class CharScanner {
 export function isAlphaNum(c: string): boolean {
 	return 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' ||
 		'0' <= c && c <= '9';
-}
-
 }

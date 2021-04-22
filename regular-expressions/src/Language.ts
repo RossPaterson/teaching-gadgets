@@ -1,7 +1,4 @@
-/// <reference path="IterableUtils.ts" />
-namespace Regex {
-
-import Iter = IterableUtils
+import * as Iter from "./IterableUtils";
 
 // Representation of a (possibly infinite) regular language.
 // The nth value in the iterable is a set of strings of length n,
@@ -51,6 +48,4 @@ function union(xs: StringSet, ys: StringSet): StringSet {
 
 function compareString(x: string, y: string): number {
 	return x < y ? -1 : x === y ? 0 : 1;
-}
-
 }

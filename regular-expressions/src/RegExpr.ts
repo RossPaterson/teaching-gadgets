@@ -1,5 +1,3 @@
-namespace Regex {
-
 // algebraic datatype of regular expressions
 // data Regexpr
 //	= emptyExpr()
@@ -92,6 +90,4 @@ class StarExpr implements RegExpr {
 	cases<R>(alts: RegExprCases<RegExpr, R>) {
 		return alts.starExpr(this.e);
 	}
-}
-
 }

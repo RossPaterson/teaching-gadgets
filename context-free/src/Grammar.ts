@@ -1,5 +1,3 @@
-namespace CFG {
-
 export class Grammar {
 	private lhss: Array<string>;
 	private productions: Map<string, Array<Array<string>>>;
@@ -33,5 +31,3 @@ export class Grammar {
 		return this.productions.get(nt)!;
 	}
 }
-
-} // namespace CFG

@@ -1,5 +1,3 @@
-namespace CFG {
-
 // Simple lists
 export type List<T> = Cons<T> | null;
 
@@ -35,6 +33,4 @@ export function elements<T>(list: List<T>): Iterable<T> {
 				yield p.head;
 		}
 	};
-}
-
 }

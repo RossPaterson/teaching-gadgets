@@ -1,7 +1,5 @@
-/// <reference path="Grammar.ts" />
-/// <reference path="Queue.ts" />
-
-namespace CFG {
+import type { Grammar } from "./Grammar";
+import { Queue } from "./Queue";
 
 // add all elements of vs to s
 function addAll<A>(s: Set<A>, vs: Iterable<A>): void {
@@ -176,5 +174,3 @@ export class GrammarProperties {
 	}
 
 }
-
-} // namespace CFG

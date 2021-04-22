@@ -1,7 +1,6 @@
-/// <reference path="List.ts" />
-/// <reference path="SVG.ts" />
-
-namespace CFG {
+import type { List } from "./List";
+import { elements, equalList } from "./List";
+import { attr, line, lines, numAttr, svgElement, text } from "./SVG";
 
 const HSEP: number = 30;
 const VSEP: number = 45;
@@ -162,5 +161,3 @@ export function drawTree(t: ParseTree): SVGElement {
 		attr("font-family", "sans-serif"),
 		numAttr("font-size", 15)], es);
 }
-
-} // namespace CFG

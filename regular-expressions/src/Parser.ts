@@ -1,7 +1,8 @@
-/// <reference path="CharScanner.ts" />
-/// <reference path="RegExpr.ts" />
-/// <reference path="Result.ts" />
-namespace Regex {
+import { CharScanner, isAlphaNum } from "./CharScanner";
+import type { RegExpr } from "./RegExpr";
+import { emptyExpr, singleExpr, orExpr, andExpr, starExpr } from "./RegExpr";
+import type { Result } from "./Result";
+import { success, failure } from "./Result";
 
 // whole string as a regular expression
 export function parseRegExpr(s: string): Result<RegExpr, string> {
@@ -60,6 +61,4 @@ function factor(scanner: CharScanner): RegExpr {
 		c = scanner.get();
 	}
 	return f;
-}
-
 }

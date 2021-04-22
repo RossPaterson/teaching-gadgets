@@ -3,8 +3,6 @@
 // The iterables returned by these functions are reusable if the iterable
 // arguments are.
 
-namespace IterableUtils {
-
 function iterable<A>(maker: () => Iterator<A>): Iterable<A> {
 	return { [Symbol.iterator]: maker };
 }
@@ -216,5 +214,3 @@ export function fixpoint<A>(f: (xs: Iterable<A>) => Iterable<A>): Iterable<A> {
 	const xs: Iterable<A> = once(iterable(function*() { yield* f(xs); }));
 	return xs;
 }
-
-} // namespace IterTools

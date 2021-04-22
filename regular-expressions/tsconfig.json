@@ -7,10 +7,10 @@
         "noImplicitReturns": true,
         "noUnusedLocals": true,
         "removeComments": true,
-        "outFile": "javascript/regex_language.js",
+        "outDir": "javascript",
         "noEmitOnError": true
     },
     "files": [
-        "src/regex_language.ts"
+        "src/main.ts"
     ]
 }

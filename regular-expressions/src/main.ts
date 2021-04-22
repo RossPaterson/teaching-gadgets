@@ -1,8 +1,8 @@
-/// <reference path="Language.ts" />
-/// <reference path="Parser.ts" />
-/// <reference path="RegExpr.ts" />
-/// <reference path="Result.ts" />
-namespace Regex {
+import type { Language } from "./Language";
+import { emptyString, singleLetter, unionLangs, catLangs, starLang, strings } from "./Language";
+import { parseRegExpr } from "./Parser";
+import type { RegExpr } from "./RegExpr";
+import { foldRegExpr } from "./RegExpr";
 
 // Mapping a regular expression to a summary of the corresponding language.
 //
@@ -66,7 +66,7 @@ function findElement(id: string): HTMLElement {
 }
 
 // remove all the children from an element
-export function removeChildren(element: HTMLElement): void {
+function removeChildren(element: HTMLElement): void {
 	while (element.lastChild)
 		element.removeChild(element.lastChild);
 }
@@ -111,7 +111,6 @@ const language: (e: RegExpr) => Language = foldRegExpr({
 	starExpr: starLang
 	});
 
-} // namespace Regex
-
-import regexAndLanguage = Regex.regexAndLanguage;
-import regexLanguage = Regex.regexLanguage;
+// global definitions
+(window as any).regexAndLanguage = regexAndLanguage;
+(window as any).regexLanguage = regexLanguage;

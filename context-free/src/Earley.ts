@@ -1,9 +1,9 @@
-/// <reference path="Grammar.ts" />
-/// <reference path="List.ts" />
-/// <reference path="ParseTree.ts" />
-/// <reference path="Queue.ts" />
-
-namespace CFG {
+import type { Grammar } from "./Grammar";
+import type { List } from "./List";
+import { cons, equalList } from "./List";
+import type { ParseTree } from "./ParseTree";
+import { NonTerminalTree, TerminalTree, equalTree } from "./ParseTree";
+import { Queue } from "./Queue";
 
 function precondition(cond: boolean): void {
 	if (! cond)
@@ -173,5 +173,3 @@ export function parse(grammar: Grammar, input: Array<string>): ParseResult {
 			trees.push(item.completeTop());
 	return { complete: ! truncated, trees: trees };
 }
-
-} // namespace CFG

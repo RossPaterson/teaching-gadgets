@@ -1,12 +1,12 @@
-/// <reference path="DOM.ts" />
-/// <reference path="Earley.ts" />
-/// <reference path="Expansion.ts" />
-/// <reference path="Grammar.ts" />
-/// <reference path="GrammarProperties.ts" />
-/// <reference path="ParseTree.ts" />
-/// <reference path="SVG.ts" />
-
-namespace CFG {
+import { bulletList, findElement, findInputElement, removeChildren, simpleElement } from "./DOM";
+import type { ParseResult } from "./Earley";
+import { parse } from "./Earley";
+import { Expansion } from "./Expansion";
+import { Grammar } from "./Grammar";
+import { GrammarProperties } from "./GrammarProperties";
+import type { NonTerminalTree } from "./ParseTree";
+import { compareNTs, drawTree } from "./ParseTree";
+import { } from "./SVG";
 
 // limit on the total size of trees when expanding the grammar
 const LIMIT: number = 10000;
@@ -154,4 +154,5 @@ function describeNTs(nts: Set<string>, adjective: string): string {
 		adjective + ".";
 }
 
-} // namespace CFG
+(window as any).GrammarExplorer = GrammarExplorer;
+(window as any).SentenceParser = SentenceParser;

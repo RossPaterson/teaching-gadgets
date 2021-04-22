@@ -1,5 +1,3 @@
-namespace CFG {
-
 // Scalable Vector Graphics
 
 // attribute of an SVG element
@@ -54,5 +52,3 @@ export function text(x: number, y: number, colour: string, s: string): SVGElemen
 	element.textContent = s;
 	return element;
 }
-
-} // namespace CFG
