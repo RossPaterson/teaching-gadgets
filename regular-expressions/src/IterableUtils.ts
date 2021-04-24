@@ -21,13 +21,12 @@ export function map<A, B>(f: (a: A) => B): (xs: Iterable<A>) => Iterable<B> {
 }
 
 export function drop<A>(n: number, xs: Iterable<A>): Iterable<A> {
-	return iterable(function*() {
+	return iterable(function() {
 		let px: Iterator<A> = iterator(xs);
 		for (let i = 0; i < n; i++)
 			if (px.next().done)
-				return;
-		for (let rx = px.next(); ! rx.done; rx = px.next())
-			yield rx.value;
+				break;
+		return px;
 	});
 }
 
