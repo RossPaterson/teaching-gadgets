@@ -11,6 +11,22 @@ function iterator<A>(xs: Iterable<A>): Iterator<A> {
 	return xs[Symbol.iterator]();
 }
 
+export function isEmpty<A>(xs: Iterable<A>): boolean {
+	for (const _x of xs)
+		return false;
+	return true;
+}
+
+export function filter<A>(p: (t: A) => boolean): (xs: Iterable<A>) => Iterable<A> {
+	return function (xs: Iterable<A>): Iterable<A> {
+		return iterable(function*() {
+			for (const x of xs)
+				if (p(x))
+					yield x;
+		});
+	};
+}
+
 export function map<A, B>(f: (a: A) => B): (xs: Iterable<A>) => Iterable<B> {
 	return function (xs: Iterable<A>): Iterable<B> {
 		return iterable(function*() {
@@ -20,14 +36,55 @@ export function map<A, B>(f: (a: A) => B): (xs: Iterable<A>) => Iterable<B> {
 	};
 }
 
+export function take<A>(n: number, xs: Iterable<A>): Iterable<A> {
+	return iterable(function*() {
+		let i: number = n;
+		if (i > 0)
+			for (const x of xs) {
+				if (i <= 0)
+					return;
+				yield x;
+				i--;
+			}
+	});
+}
+
 export function drop<A>(n: number, xs: Iterable<A>): Iterable<A> {
-	return iterable(function() {
+	return iterable(function*() {
 		let px: Iterator<A> = iterator(xs);
 		for (let i = 0; i < n; i++)
 			if (px.next().done)
-				break;
-		return px;
+				return;
+		for (let rx = px.next(); ! rx.done; rx = px.next())
+			yield rx.value;
 	});
+}
+
+export function takeWhile<A>(p: (x: A) => boolean): (xs: Iterable<A>) => Iterable<A> {
+	return function (xs: Iterable<A>): Iterable<A> {
+		return iterable(function*() {
+			for (const x of xs) {
+				if (! p(x))
+					return;
+				yield x;
+			}
+		});
+	};
+}
+
+export function dropWhile<A>(p: (x: A) => boolean): (xs: Iterable<A>) => Iterable<A> {
+	return function (xs: Iterable<A>): Iterable<A> {
+		return iterable(function*() {
+			let px: Iterator<A> = xs[Symbol.iterator]();
+			let curr_x: IteratorResult<A> = px.next();
+			while (! curr_x.done && p(curr_x.value))
+				curr_x = px.next();
+			while (! curr_x.done) {
+				yield curr_x.value;
+				curr_x = px.next();
+			}
+		});
+	};
 }
 
 export function foldl<A, B>(f: (x: A, y: B) => B, z: B): (xs: Iterable<A>) => B {
@@ -39,11 +96,65 @@ export function foldl<A, B>(f: (x: A, y: B) => B, z: B): (xs: Iterable<A>) => B 
 	};
 }
 
+export function sum(xs: Iterable<number>): number {
+	let y: number = 0;
+	for (const x of xs)
+		y = x + y;
+	return y;
+}
+
+export function product(xs: Iterable<number>): number {
+	let y: number = 1;
+	for (const x of xs)
+		y = x * y;
+	return y;
+}
+
 export function concat<A, B extends Iterable<A>>(xss: Iterable<B>): Iterable<A> {
 	return iterable(function*() {
 		for (const xs of xss)
 			yield* xs;
 	});
+}
+
+export function scanl<A, B>(f: (x: A, y: B) => B, z: B): (xs: Iterable<A>) => Iterable<B> {
+	return function (xs: Iterable<A>): Iterable<B> {
+		return iterable(function*() {
+			let y: B = z;
+			yield y;
+			for (const x of xs) {
+				y = f(x, y);
+				yield y;
+			}
+		});
+	};
+}
+
+export function iterate<A>(f: (x: A) => A, x: A): Iterable<A> {
+	return iterable(function*() {
+		var y: A = x;
+		for (;;) {
+			yield y;
+			y = f(y);
+		}
+	});
+}
+
+export function zipWith<A, B, C>(f: (x: A, y: B) => C):
+		(xs: Iterable<A>, ys: Iterable<B>) => Iterable<C> {
+	return function (xs: Iterable<A>, ys: Iterable<B>): Iterable<C> {
+		return iterable(function*() {
+			let px: Iterator<A> = iterator(xs);
+			let py: Iterator<B> = iterator(ys);
+			let rx: IteratorResult<A> = px.next();
+			let ry: IteratorResult<B> = py.next();
+			while (! rx.done && ! ry.done) {
+				yield f(rx.value, ry.value);
+				rx = px.next();
+				ry = py.next();
+			}
+		});
+	};
 }
 
 export function longZipWith<A>(f: (x: A, y: A) => A):
@@ -141,6 +252,13 @@ export function cons<A>(x: A, xs: Iterable<A>): Iterable<A> {
 	return iterable(function*() {
 		yield x;
 		yield* xs;
+	});
+}
+
+export function append<A>(xs: Iterable<A>, ys: Iterable<A>): Iterable<A> {
+	return iterable(function*() {
+		yield* xs;
+		yield* ys;
 	});
 }
 
