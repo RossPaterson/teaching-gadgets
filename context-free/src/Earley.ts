@@ -99,11 +99,12 @@ function endItem(nt: string, rhs: Array<string>, finish: number): EarleyItem {
 // additional start nonterminal, with a unit production S' -> S
 const START: string = "Start";
 
+// maximum number of items allowed in a state
 const EXPANSION_LIMIT: number = 100;
 
 export type ParseResult = {
-	complete: boolean, // all possible parses are included in trees
-	trees: Array<NonTerminalTree> // possible parses
+	readonly complete: boolean, // trees includes all possible parses
+	readonly trees: Array<NonTerminalTree> // possible parses
 	};
 
 export function parse(grammar: Grammar, input: Array<string>): ParseResult {

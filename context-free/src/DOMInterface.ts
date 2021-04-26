@@ -12,7 +12,9 @@ import { } from "./SVG";
 const LIMIT: number = 10000;
 
 // pair of DOM elements holding a production
-type ProductionSource = { lhs: HTMLInputElement, rhs: HTMLInputElement }
+type ProductionSource = {
+	readonly lhs: HTMLInputElement,
+	readonly rhs: HTMLInputElement };
 
 // collection of DOM elements holding a grammar and locations for output
 export class GrammarExplorer {

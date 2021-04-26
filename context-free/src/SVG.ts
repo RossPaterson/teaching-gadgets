@@ -1,7 +1,7 @@
 // Scalable Vector Graphics
 
 // attribute of an SVG element
-type Attribute = { name: string, value: string };
+export type Attribute = { readonly name: string, readonly value: string };
 
 // a string-valued attribute
 export function attr(n: string, v: string): Attribute {
