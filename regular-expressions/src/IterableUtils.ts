@@ -27,6 +27,26 @@ export function filter<A>(p: (t: A) => boolean): (xs: Iterable<A>) => Iterable<A
 	};
 }
 
+// like any, but that is reserved in typescript
+export function some<A>(p: (t: A) => boolean): (xs: Iterable<A>) => boolean {
+	return function (xs: Iterable<A>): boolean {
+		for (const x of xs)
+			if (p(x))
+				return true;
+		return false;
+	};
+}
+
+// like all, but that is reserved in typescript
+export function every<A>(p: (t: A) => boolean): (xs: Iterable<A>) => boolean {
+	return function (xs: Iterable<A>): boolean {
+		for (const x of xs)
+			if (! p(x))
+				return false;
+		return true;
+	};
+}
+
 export function map<A, B>(f: (a: A) => B): (xs: Iterable<A>) => Iterable<B> {
 	return function (xs: Iterable<A>): Iterable<B> {
 		return iterable(function*() {
@@ -41,10 +61,10 @@ export function take<A>(n: number, xs: Iterable<A>): Iterable<A> {
 		let i: number = n;
 		if (i > 0)
 			for (const x of xs) {
-				if (i <= 0)
-					return;
 				yield x;
 				i--;
+				if (i <= 0)
+					return;
 			}
 	});
 }
