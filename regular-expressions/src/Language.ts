@@ -43,7 +43,7 @@ const unions: (ss: Iterable<StringSet>) => StringSet =
 
 // union of two sets of strings
 function union(xs: StringSet, ys: StringSet): StringSet {
-	return Array.from(Iter.mergeWith(compareString, xs, ys));
+	return Array.from(Iter.mergeWith(compareString)(xs, ys));
 }
 
 function compareString(x: string, y: string): number {

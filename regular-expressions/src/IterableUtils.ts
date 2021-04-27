@@ -234,38 +234,40 @@ export function diagonalsWith<A, B, C>(f: (x: A, y: B) => C):
 }
 
 // merge two ordered sequences without duplicates
-export function mergeWith<A>(compare: (x: A, y: A) => number,
-		xs: Iterable<A>, ys: Iterable<A>): Iterable<A> {
-	return iterable(function*() {
-		let px: Iterator<A> = iterator(xs);
-		let py: Iterator<A> = iterator(ys);
-		let rx: IteratorResult<A> = px.next();
-		let ry: IteratorResult<A> = py.next();
-		while (! rx.done && ! ry.done) {
-			const comp = compare(rx.value, ry.value);
-			if (comp === 0) {
-				yield rx.value;
-				rx = px.next();
-				ry = py.next();
-			} else if (comp < 0) {
-				yield rx.value;
-				rx = px.next();
-			} else {
-				yield ry.value;
-				ry = py.next();
+export function mergeWith<A>(compare: (x: A, y: A) => number):
+		(xs: Iterable<A>, ys: Iterable<A>) => Iterable<A> {
+	return function (xs: Iterable<A>, ys: Iterable<A>): Iterable<A> {
+		return iterable(function*() {
+			let px: Iterator<A> = iterator(xs);
+			let py: Iterator<A> = iterator(ys);
+			let rx: IteratorResult<A> = px.next();
+			let ry: IteratorResult<A> = py.next();
+			while (! rx.done && ! ry.done) {
+				const comp = compare(rx.value, ry.value);
+				if (comp === 0) {
+					yield rx.value;
+					rx = px.next();
+					ry = py.next();
+				} else if (comp < 0) {
+					yield rx.value;
+					rx = px.next();
+				} else {
+					yield ry.value;
+					ry = py.next();
+				}
 			}
-		}
-		if (rx.done)
-			while (! ry.done) {
-				yield ry.value;
-				ry = py.next();
-			}
-		else
-			while (! rx.done) {
-				yield rx.value;
-				rx = px.next();
-			}
-	});
+			if (rx.done)
+				while (! ry.done) {
+					yield ry.value;
+					ry = py.next();
+				}
+			else
+				while (! rx.done) {
+					yield rx.value;
+					rx = px.next();
+				}
+		});
+	};
 }
 
 export function cons<A>(x: A, xs: Iterable<A>): Iterable<A> {

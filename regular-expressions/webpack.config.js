@@ -4,7 +4,7 @@ module.exports = {
   mode: 'production',
   entry: './javascript/main.js',
   output: {
-    path: path.resolve(__dirname, 'javascript'),
+    path: path.join(process.cwd(), 'javascript'),
     filename: 'regex_language.js',
   },
 };
